@@ -2,12 +2,19 @@ import requests
 import json
 import pandas as pd
 import numpy as np
+from pmdarima.arima import auto_arima
+from fbprophet import Prophet
+
+from pandas.plotting import register_matplotlib_converters
 import scipy
 from sklearn import neighbors
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 import seaborn as sns
+#from fastai.structured import add_datepart
+scaler = MinMaxScaler(feature_range=(0, 1))
 
 sns.set_style('darkgrid')
 
@@ -15,7 +22,7 @@ sns.set_style('darkgrid')
 response = requests.get("http://148.251.22.254:8080/price-api-1.0/price/findAll")
 data = response.text
 parsed = json.loads(data)
-print(json.dumps(parsed, indent=4))
+#print(json.dumps(parsed, indent=4))
 
 # dataframe
 df = pd.DataFrame(parsed)
@@ -23,7 +30,7 @@ df = pd.DataFrame(parsed)
 
 # separate data based on dataSource
 dfOKAA = df[df['dataSource'] == 'OKAA']
-print(dfOKAA)
+#print(dfOKAA)
 dfEurop = df[df['dataSource'] == 'European Commission']
 # print(dfEurop)
 dfFAO = df[df['dataSource'] == 'FAO']
@@ -32,129 +39,235 @@ dfFAO = df[df['dataSource'] == 'FAO']
 # Counting the number of unique countries in the dataset.
 
 nunFAO = dfFAO['country'].nunique()
-print(nunFAO)
+#print(nunFAO)
 nunEurop = dfFAO['country'].nunique()
-print(nunEurop)
+#print(nunEurop)
 nunOKAA = dfFAO['country'].nunique()
-print(nunOKAA)
+#print(nunOKAA)
 
-# Visualization
-
-# hist
-hist1 = dfOKAA['price'].hist()
-print(hist1)
-hist2 = dfOKAA['price'].plot(kind='hist', bins=20)
-print(hist2)
-
-# line plots
-line_plot = dfOKAA.plot.line(x='country', y='price', figsize=(8, 6))
-print(line_plot)
-
-# box Plot
-box_plot = dfOKAA.plot.box(figsize=(10, 8))
-print(box_plot)
-
-# Hexagonal Plots
-hexbin = dfOKAA.plot.hexbin(x='price', y='price', gridsize=30, figsize=(8, 6))
-print(hexbin)
-
-# Kernel Density Plots
-kern = dfOKAA['price'].plot.kde()
-print(kern)
+# #Visualization
+imageDir = "plots/"
+df_milk = dfFAO[dfFAO['product'] == 'milk and milk products']
+ax = plt.gca()
+df_milk.plot(kind='line',x='priceStringDate',y='price',ax=ax)
+# plt.savefig(imageDir + 'milk.png', bbox_inches='tight')
+#plt.show()
+# #Visualization
+#
+# # hist
+#
+# hist2 = dfOKAA['price'].plot(kind='hist', bins=100)
+# print(hist2)
+# plt.show()
+#
+# # create figure and axis
+# fig, ax = plt.subplots()
+# # plot histogram
+# ax.hist(dfFAO['price'])
+# # set title and labels
+# ax.set_title('hist')
+# ax.set_xlabel('price')
+# ax.set_ylabel('den exw idea')
+# plt.show()
+# # line plots
+# line_plot = dfOKAA.plot.line(x='priceStringDate', y='price', figsize=(8, 6))
+# print(line_plot)
+# plt.show()
+# # box Plot
+# box_plot = dfOKAA.plot.box(figsize=(10, 8))
+# print(box_plot)
+# plt.show()
+#
+# # Hexagonal Plots
+# hexbin = dfOKAA.plot.hexbin(x='price', y='price', gridsize=30, figsize=(8, 6))
+# print(hexbin)
+# plt.show()
+#
+# # Kernel Density Plots
+# kern = dfOKAA['price'].plot.kde()
+# print(kern)
+# plt.show()
+#
+#
+# #scatter plot
+#
+# # create a figure and axis
+# fig, ax = plt.subplots()
+# # scatter the sepal_length against the sepal_width
+# ax.scatter(dfFAO['priceStringDate'], dfFAO['price'])
+# # set a title and labels
+# ax.set_title('FAO Dataset')
+# ax.set_xlabel('Date')
+# ax.set_ylabel('price')
+# plt.show()
 
 # predictions
+
+#plot
+df_country = df[df['country'] == 'greece']
+#df_milk = dfFAO[dfFAO['product'] == 'milk and milk products']
+
+ax = plt.gca()
+df_country.plot(kind='line', x='priceStringDate', y='price', ax=ax)
+#plt.show()
+
 # Moving Average
-# setting index as date
-df['priceStringDate'] = pd.to_datetime(df.priceStringDate, format='%Y-%m-%d')
-
-df.index = df['priceStringDate']
-
-# plot
-plt.figure(figsize=(16, 8))
-plt.plot(df['price'], label='Close Price history')
 
 # creating dataframe with date and the target variable
-Data = df.sort_index(ascending=True, axis=0)
-new_Data = pd.DataFrame(index=range(0, len(df)), columns=['priceStringDate', 'price'])
+Data = df.sort_index(ascending=True, axis=0) #sorting
+new_Data = pd.DataFrame(index=range(0, len(df)), columns=['priceStringDate', 'price']) #create a separate dataset
 
 for i in range(0, len(Data)):
     new_Data['priceStringDate'][i] = Data['priceStringDate'][i]
     new_Data['price'][i] = Data['price'][i]
 
-# splitting into train and validation
-train = new_Data[:2987]
-valid = new_Data[2987:]
-new_Data.shape, train.shape, valid.shape
-((1235, 2), (987, 2), (248, 2))
-train['priceStringDate'].min(), train['priceStringDate'].max(), valid['priceStringDate'].min(), valid[
-    'priceStringDate'].max()
 
+# splitting into train and validation
+train = new_Data[:55382] #80%
+valid = new_Data[55382:] #20%
+#
+print(new_Data.shape,train.shape, valid.shape)
+
+trainmin = train['priceStringDate'].min()
+trainmax = train['priceStringDate'].max()
+validmin = valid['priceStringDate'].min()
+validmax = valid['priceStringDate'].max()
+print(trainmin, trainmax, validmin, validmax)
 
 # make predictions
 preds = []
-for i in range(0, 248):
-    a = train['price'][len(train) - 248 + i:].sum() + sum(preds)
-    b = a / 248
+for i in range(0, 13846):
+    a = train['price'][len(train) - 13846 + i:].sum() + sum(preds)
+    b = a / 13846
     preds.append(b)
 
 # calculate rmse
 rms = np.sqrt(np.mean(np.power((np.array(valid['price']) - preds), 2)))
 print(rms)
 
-# plot
-valid['Predictions'] = 0
-valid['Predictions'] = preds
-plt.plot(train['price'])
-plt.plot(valid[['price', 'Predictions']])
-
+# plot de paizei swsta
+# valid['Predictions'] = 0
+# valid['Predictions'] = preds
+# plt.plot(train['price'])
+# plt.show()
+# plt.plot(valid[['price', 'Predictions']])
+# plt.show()
+#
 # Linear Regression
-data1 = df.sort_index(ascending=True, axis=0)
 
-# creating a separate dataset
-new_data = pd.DataFrame(index=range(0, len(df)), columns=['priceStringDate', 'Close'])
+#create features
+#add_datepart(new_Data, 'priceStringDate')
+# new_Data.drop('Elapsed', axis=1, inplace=True)  # elapsed will be the time stamp
+#
+# #
+# x_train = train.drop('price', axis=1)
+# y_train = train['price']
+# x_valid = valid.drop('price', axis=1)
+# y_valid = valid['price']
+# #
+# # implement linear regression
+# model = LinearRegression()
+# model.fit(x_train, y_train)
+# #
+# # make predictions and find the rmse
+# preds = model.predict(x_valid)
+# rms = np.sqrt(np.mean(np.power((np.array(y_valid) - np.array(preds)), 2)))
+# print(rms)
+#
+# # plot
+# # valid['Predictions'] = 0
+# # valid['Predictions'] = preds
+# #
+# # valid.index = new_Data[55382:].index
+# # train.index = new_Data[:55382].index
+# #
+# # plt.plot(train['price'])
+# # plt.plot(valid[['price', 'Predictions']])
+#
+# #k- Nearest Neighbours
+#
+# #scaling data
+# x_train_scaled = scaler.fit_transform(x_train)
+# x_train = pd.DataFrame(x_train_scaled)
+# x_valid_scaled = scaler.fit_transform(x_valid)
+# x_valid = pd.DataFrame(x_valid_scaled)
+#
+# #using gridsearch to find the best parameter
+# params = {'n_neighbors':[2,3,4,5,6,7,8,9]}
+# knn = neighbors.KNeighborsRegressor()
+# model = GridSearchCV(knn, params, cv=5)
+#
+# #fit the model and make predictions
+# model.fit(x_train,y_train)
+# preds = model.predict(x_valid)
+#
+# #rmse
+# rms=np.sqrt(np.mean(np.power((np.array(y_valid)-np.array(preds)),2)))
+# print('rms from knn')
+# print(rms)
+# #plot
+# # valid['Predictions'] = 0
+# # valid['Predictions'] = preds
+# # plt.plot(valid[['price', 'Predictions']])
+# # plt.plot(train['price'])
+#
 
-for i in range(0, len(data)):
-    new_data['priceStringDate'][i] = data1['priceStringDate'][i]
-    new_data['Price'][i] = data1['Price'][i]
-# create features
-from fastai.structured import add_datepart
+# Auto Arima
+Data = df.sort_index(ascending=True, axis=0)
 
-add_datepart(new_data, 'Date')
-new_data.drop('Elapsed', axis=1, inplace=True)  # elapsed will be the time stamp
+train = Data[:55382]
+valid = Data[55382:]
 
-new_data['mon_fri'] = 0
-for i in range(0, len(new_data)):
-    if (new_data['Dayofweek'][i] == 0 or new_data['Dayofweek'][i] == 4):
-        new_data['mon_fri'][i] = 1
-    else:
-        new_data['mon_fri'][i] = 0
+training = train['price']
+validation = valid['price']
 
-# split into train and validation
-train = new_data[:987]
-valid = new_data[987:]
+model = auto_arima(training, start_p=1, start_q=1, max_p=3, max_q=3, m=12,start_P=0, seasonal=True, d=1, D=1, trace=True,error_action='ignore',suppress_warnings=True)
+model.fit(training)
 
-x_train = train.drop('Close', axis=1)
-y_train = train['Close']
-x_valid = valid.drop('Close', axis=1)
-y_valid = valid['Close']
+forecast = model.predict(n_periods=13846)
+forecast = pd.DataFrame(forecast,index = valid.index,columns=['Prediction'])
 
-# implement linear regression
-from sklearn.linear_model import LinearRegression
-
-model = LinearRegression()
-model.fit(x_train, y_train)
-
-# make predictions and find the rmse
-preds = model.predict(x_valid)
-rms = np.sqrt(np.mean(np.power((np.array(y_valid) - np.array(preds)), 2)))
+rms=np.sqrt(np.mean(np.power((np.array(valid['price'])-np.array(forecast['Prediction'])),2)))
+print('auto arima')
 print(rms)
+# #plot
+# plt.plot(train['price'])
+# plt.plot(valid['price'])
+# plt.plot(forecast['Prediction'])
 
-# plot
-valid['Predictions'] = 0
-valid['Predictions'] = preds
+#Prophet
+#creating dataframe
+new_data = pd.DataFrame(index=range(0,len(df)),columns=['priceStringDate', 'price'])
 
-valid.index = new_data[987:].index
-train.index = new_data[:987].index
+for i in range(0,len(data)):
+    new_data['priceStringDate'][i] = data['priceStringDate'][i]
+    new_data['price'][i] = data['price'][i]
 
-plt.plot(train['Price'])
-plt.plot(valid[['Price', 'Predictions']])
+new_data['priceStringDate'] = pd.to_datetime(new_data.Date,format='%Y-%m-%d')
+new_data.index = new_data['priceStringDate']
+
+#preparing data
+new_data.rename(columns={'price': 'y', 'priceStringDate': 'ds'}, inplace=True)
+
+#train and validation
+train = new_data[:55382]
+valid = new_data[55382:]
+
+#fit the model
+model = Prophet()
+model.fit(train)
+
+#predictions
+close_prices = model.make_future_dataframe(periods=len(valid))
+forecast = model.predict(close_prices)
+
+#rmse
+forecast_valid = forecast['yhat'][55382:]
+rms=np.sqrt(np.mean(np.power((np.array(valid['y'])-np.array(forecast_valid)),2)))
+print(rms)
+#plot
+# valid['Predictions'] = 0
+# valid['Predictions'] = forecast_valid.values
+#
+# plt.plot(train['y'])
+# plt.plot(valid[['y', 'Predictions']])
