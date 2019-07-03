@@ -2,13 +2,21 @@ import requests
 import json
 import pandas as pd
 import numpy as np
-from pmdarima.arima import auto_arima
-from fbprophet import Prophet
+# from pmdarima.arima import auto_arima
+# #from fbprophet import Prophet
+# from statsmodels.tsa.arima_model import ARMA
+# from pandas.plotting import register_matplotlib_converters
+# import scipy
+# from sklearn import neighbors
+# from sklearn.model_selection import GridSearchCV
+# from sklearn.preprocessing import MinMaxScaler
+import tensorflow as tf
 
-from pandas.plotting import register_matplotlib_converters
-import scipy
-from sklearn import neighbors
-from sklearn.model_selection import GridSearchCV
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import Dropout
+from keras.layers import LSTM
+import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
@@ -145,6 +153,17 @@ for i in range(0, 13846):
 rms = np.sqrt(np.mean(np.power((np.array(valid['price']) - preds), 2)))
 print(rms)
 
+#MA with ARMA class
+#code
+
+# fit model
+# print(np.asarray(new_Data))
+# model = ARMA(new_Data, order=(0, 1)) #first-order moving average model.
+# model_fit = model.fit(disp=False)
+# # make prediction
+# yhat = model_fit.predict(len(new_Data), len(new_Data))
+# print(yhat)
+
 # plot de paizei swsta
 # valid['Predictions'] = 0
 # valid['Predictions'] = preds
@@ -153,6 +172,8 @@ print(rms)
 # plt.plot(valid[['price', 'Predictions']])
 # plt.show()
 #
+
+
 # Linear Regression
 
 #create features
@@ -213,23 +234,25 @@ print(rms)
 #
 
 # Auto Arima
-Data = df.sort_index(ascending=True, axis=0)
-
-train = Data[:55382]
-valid = Data[55382:]
-
-training = train['price']
-validation = valid['price']
-
-model = auto_arima(training, start_p=1, start_q=1, max_p=3, max_q=3, m=12,start_P=0, seasonal=True, d=1, D=1, trace=True,error_action='ignore',suppress_warnings=True)
-model.fit(training)
-
-forecast = model.predict(n_periods=13846)
-forecast = pd.DataFrame(forecast,index = valid.index,columns=['Prediction'])
-
-rms=np.sqrt(np.mean(np.power((np.array(valid['price'])-np.array(forecast['Prediction'])),2)))
-print('auto arima')
-print(rms)
+# Data = df.sort_index(ascending=True, axis=0)
+# #Data = dfFAO.sort_index(ascending=True, axis=0)
+# train = Data[:55382]
+# valid = Data[55382:]
+# #train = Data[:3000]
+# #valid = Data[3000:]
+# training = train['price']
+# validation = valid['price']
+#
+# model = auto_arima(training, start_p=1, start_q=1, max_p=3, max_q=3, m=12,start_P=0, seasonal=True, d=1, D=1, trace=True,error_action='ignore',suppress_warnings=True)
+# model.fit(training)
+#
+# forecast = model.predict(n_periods=13846)
+# #forecast = model.predict(n_periods=133)
+# forecast = pd.DataFrame(forecast,index = valid.index,columns=['Prediction'])
+#
+# rms=np.sqrt(np.mean(np.power((np.array(valid['price'])-np.array(forecast['Prediction'])),2)))
+# print('auto arima')
+# print(rms)
 # #plot
 # plt.plot(train['price'])
 # plt.plot(valid['price'])
@@ -237,37 +260,97 @@ print(rms)
 
 #Prophet
 #creating dataframe
-new_data = pd.DataFrame(index=range(0,len(df)),columns=['priceStringDate', 'price'])
-
-for i in range(0,len(data)):
-    new_data['priceStringDate'][i] = data['priceStringDate'][i]
-    new_data['price'][i] = data['price'][i]
-
-new_data['priceStringDate'] = pd.to_datetime(new_data.Date,format='%Y-%m-%d')
-new_data.index = new_data['priceStringDate']
-
-#preparing data
-new_data.rename(columns={'price': 'y', 'priceStringDate': 'ds'}, inplace=True)
-
-#train and validation
-train = new_data[:55382]
-valid = new_data[55382:]
-
-#fit the model
-model = Prophet()
-model.fit(train)
-
-#predictions
-close_prices = model.make_future_dataframe(periods=len(valid))
-forecast = model.predict(close_prices)
-
-#rmse
-forecast_valid = forecast['yhat'][55382:]
-rms=np.sqrt(np.mean(np.power((np.array(valid['y'])-np.array(forecast_valid)),2)))
-print(rms)
+# new_data = pd.DataFrame(index=range(0,len(df)),columns=['priceStringDate', 'price'])
+#
+# for i in range(0,len(data)):
+#     new_data['priceStringDate'][i] = data['priceStringDate'][i]
+#     new_data['price'][i] = data['price'][i]
+#
+# new_data['priceStringDate'] = pd.to_datetime(new_data.Date,format='%Y-%m-%d')
+# new_data.index = new_data['priceStringDate']
+#
+# #preparing data
+# new_data.rename(columns={'price': 'y', 'priceStringDate': 'ds'}, inplace=True)
+#
+# #train and validation
+# train = new_data[:55382]
+# valid = new_data[55382:]
+#
+# #fit the model
+# model = Prophet()
+# model.fit(train)
+#
+# #predictions
+# close_prices = model.make_future_dataframe(periods=len(valid))
+# forecast = model.predict(close_prices)
+#
+# #rmse
+# forecast_valid = forecast['yhat'][55382:]
+# rms=np.sqrt(np.mean(np.power((np.array(valid['y'])-np.array(forecast_valid)),2)))
+# print(rms)
 #plot
 # valid['Predictions'] = 0
 # valid['Predictions'] = forecast_valid.values
 #
 # plt.plot(train['y'])
 # plt.plot(valid[['y', 'Predictions']])
+
+
+#Long Short Term Memory (LSTM)
+
+#setting index
+new_Data.index = new_Data.priceStringDate
+new_Data.drop('priceStringDate', axis=1, inplace=True)
+
+#creating train and test sets
+dataset = new_Data.values
+
+train = dataset[0:55382,:]
+valid = dataset[55382:,:]
+
+#converting dataset into x_train and y_train
+scaler = MinMaxScaler(feature_range=(0, 1))
+scaled_data = scaler.fit_transform(dataset)
+
+x_train = []
+y_train = []
+for i in range(60,len(train)):
+    x_train.append(scaled_data[i-60:i,0])
+    y_train.append(scaled_data[i,0])
+x_train = np.array(x_train)
+y_train = np.array(y_train)
+
+x_train = np.reshape(x_train, (x_train.shape[0],x_train.shape[1],1))
+
+# create and fit the LSTM network
+model = Sequential()
+model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1],1)))
+model.add(LSTM(units=50))
+model.add(Dense(1))
+
+model.compile(loss='mean_squared_error', optimizer='adam')
+model.fit(x_train, y_train, epochs=1, batch_size=1, verbose=2)
+
+#predicting 246 values, using past 60 from the train data
+inputs = new_data[len(new_data) - len(valid) - 60:].values
+inputs = inputs.reshape(-1,1)
+inputs  = scaler.transform(inputs)
+
+X_test = []
+for i in range(60,inputs.shape[0]):
+    X_test.append(inputs[i-60:i,0])
+X_test = np.array(X_test)
+
+X_test = np.reshape(X_test, (X_test.shape[0],X_test.shape[1],1))
+closing_price = model.predict(X_test)
+closing_price = scaler.inverse_transform(closing_price)
+
+rms=np.sqrt(np.mean(np.power((valid-closing_price),2)))
+print(rms)
+
+#for plotting
+# train = new_Data[:55382]
+# valid = new_Data[55382:]
+# valid['Predictions'] = closing_price
+# plt.plot(train['price'])
+# plt.plot(valid[['price','Predictions']])
