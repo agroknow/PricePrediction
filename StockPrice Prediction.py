@@ -10,7 +10,7 @@ import numpy as np
 # from sklearn import neighbors
 # from sklearn.model_selection import GridSearchCV
 # from sklearn.preprocessing import MinMaxScaler
-import tensorflow as tf
+#import tensorflow as tf
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -43,6 +43,7 @@ dfEurop = df[df['dataSource'] == 'European Commission']
 # print(dfEurop)
 dfFAO = df[df['dataSource'] == 'FAO']
 # print(dfFAO)
+prouped_ordered = df.groupby(['product']).size().reset_index(name='counts').sort_values('counts')
 
 # Counting the number of unique countries in the dataset.
 
@@ -111,17 +112,17 @@ df_milk.plot(kind='line',x='priceStringDate',y='price',ax=ax)
 
 # predictions
 
-#plot
-df_country = df[df['country'] == 'greece']
-#df_milk = dfFAO[dfFAO['product'] == 'milk and milk products']
-
-ax = plt.gca()
-df_country.plot(kind='line', x='priceStringDate', y='price', ax=ax)
-#plt.show()
-
-# Moving Average
-
-# creating dataframe with date and the target variable
+# #plot
+# df_country = df[df['country'] == 'greece']
+# #df_milk = dfFAO[dfFAO['product'] == 'milk and milk products']
+#
+# ax = plt.gca()
+# df_country.plot(kind='line', x='priceStringDate', y='price', ax=ax)
+# #plt.show()
+#
+# # Moving Average
+#
+# # creating dataframe with date and the target variable
 Data = df.sort_index(ascending=True, axis=0) #sorting
 new_Data = pd.DataFrame(index=range(0, len(df)), columns=['priceStringDate', 'price']) #create a separate dataset
 
@@ -299,54 +300,54 @@ print(rms)
 #Long Short Term Memory (LSTM)
 
 #setting index
-new_Data.index = new_Data.priceStringDate
-new_Data.drop('priceStringDate', axis=1, inplace=True)
-
-#creating train and test sets
-dataset = new_Data.values
-
-train = dataset[0:55382,:]
-valid = dataset[55382:,:]
-
-#converting dataset into x_train and y_train
-scaler = MinMaxScaler(feature_range=(0, 1))
-scaled_data = scaler.fit_transform(dataset)
-
-x_train = []
-y_train = []
-for i in range(60,len(train)):
-    x_train.append(scaled_data[i-60:i,0])
-    y_train.append(scaled_data[i,0])
-x_train = np.array(x_train)
-y_train = np.array(y_train)
-
-x_train = np.reshape(x_train, (x_train.shape[0],x_train.shape[1],1))
-
-# create and fit the LSTM network
-model = Sequential()
-model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1],1)))
-model.add(LSTM(units=50))
-model.add(Dense(1))
-
-model.compile(loss='mean_squared_error', optimizer='adam')
-model.fit(x_train, y_train, epochs=1, batch_size=1, verbose=2)
-
-#predicting 246 values, using past 60 from the train data
-inputs = new_data[len(new_data) - len(valid) - 60:].values
-inputs = inputs.reshape(-1,1)
-inputs  = scaler.transform(inputs)
-
-X_test = []
-for i in range(60,inputs.shape[0]):
-    X_test.append(inputs[i-60:i,0])
-X_test = np.array(X_test)
-
-X_test = np.reshape(X_test, (X_test.shape[0],X_test.shape[1],1))
-closing_price = model.predict(X_test)
-closing_price = scaler.inverse_transform(closing_price)
-
-rms=np.sqrt(np.mean(np.power((valid-closing_price),2)))
-print(rms)
+# new_Data.index = new_Data.priceStringDate
+# new_Data.drop('priceStringDate', axis=1, inplace=True)
+#
+# #creating train and test sets
+# dataset = new_Data.values
+#
+# train = dataset[0:55382,:]
+# valid = dataset[55382:,:]
+#
+# #converting dataset into x_train and y_train
+# scaler = MinMaxScaler(feature_range=(0, 1))
+# scaled_data = scaler.fit_transform(dataset)
+#
+# x_train = []
+# y_train = []
+# for i in range(60,len(train)):
+#     x_train.append(scaled_data[i-60:i,0])
+#     y_train.append(scaled_data[i,0])
+# x_train = np.array(x_train)
+# y_train = np.array(y_train)
+#
+# x_train = np.reshape(x_train, (x_train.shape[0],x_train.shape[1],1))
+#
+# # create and fit the LSTM network
+# model = Sequential()
+# model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1],1)))
+# model.add(LSTM(units=50))
+# model.add(Dense(1))
+#
+# model.compile(loss='mean_squared_error', optimizer='adam')
+# model.fit(x_train, y_train, epochs=1, batch_size=1, verbose=2)
+#
+# #predicting 246 values, using past 60 from the train data
+# inputs = new_data[len(new_data) - len(valid) - 60:].values
+# inputs = inputs.reshape(-1,1)
+# inputs  = scaler.transform(inputs)
+#
+# X_test = []
+# for i in range(60,inputs.shape[0]):
+#     X_test.append(inputs[i-60:i,0])
+# X_test = np.array(X_test)
+#
+# X_test = np.reshape(X_test, (X_test.shape[0],X_test.shape[1],1))
+# closing_price = model.predict(X_test)
+# closing_price = scaler.inverse_transform(closing_price)
+#
+# rms=np.sqrt(np.mean(np.power((valid-closing_price),2)))
+# print(rms)
 
 #for plotting
 # train = new_Data[:55382]
