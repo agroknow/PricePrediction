@@ -25,34 +25,111 @@ parsed = json.loads(data)
 # dataframe
 df = pd.DataFrame(parsed)
 
+print(df['dataSource'])
+df_okaa = df[df['dataSource'] == 'OKAA']
+df_okaa = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
 
+dataset = df_okaa
+#Data cleaning
+dataset.isna().any()
+
+training_set=dataset['price']
+training_set=pd.DataFrame(training_set)
+
+# Feature Scaling Normalization
+from sklearn.preprocessing import MinMaxScaler
+sc = MinMaxScaler(feature_range = (0, 1))
+training_set_scaled = sc.fit_transform(training_set)
+# Creating a data structure with 60 timesteps and 1 output
+X_train = []
+y_train = []
+for i in range(60, len(training_set_scaled)):
+    X_train.append(training_set_scaled[i-60:i, 0])
+    y_train.append(training_set_scaled[i, 0])
+X_train, y_train = np.array(X_train), np.array(y_train)
+
+# Reshaping
+X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
+
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Dropout
+
+# Initialising the RNN
+regressor = Sequential()
+# Adding the first LSTM layer and some Dropout regularisation
+regressor.add(LSTM(units = 50, return_sequences = True, input_shape = (X_train.shape[1], 1)))
+regressor.add(Dropout(0.2))
+
+# Adding a second LSTM layer and some Dropout regularisation
+regressor.add(LSTM(units = 50, return_sequences = True))
+regressor.add(Dropout(0.2))
+
+# Adding a third LSTM layer and some Dropout regularisation
+regressor.add(LSTM(units = 50, return_sequences = True))
+regressor.add(Dropout(0.2))
+
+# Adding a fourth LSTM layer and some Dropout regularisation
+regressor.add(LSTM(units = 50))
+regressor.add(Dropout(0.2))
+
+# Adding the output layer
+regressor.add(Dense(units = 1))
+# Compiling the RNN
+regressor.compile(optimizer = 'adam', loss = 'mean_squared_error')
+
+# Fitting the RNN to the Training set
+regressor.fit(X_train, y_train, epochs = 5, batch_size = 32)
+
+#evaluate the model
+train_acc = regressor.evaluate(X_train, y_train, verbose=1)
+print('train_acc')
+print(train_acc)
+
+quit(0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dataset = pd.read_csv('Google_Stock_Price_Train.csv', index_col="Date", parse_dates=True)
 
 ####### extra virgin olive oil (up to 0,8°)
 
 dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
-dfevoo = dfevoo[dfevoo['country'] == 'greece']
 # print(dfevoo)
 ax = plt.gca()
 dfevoo.plot(kind='line', x='priceStringDate', y='price', ax=ax, figsize=(18, 16))
-plt.show()
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-Data = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
-  by='priceStringDate')
-# print(dfevoo.info())
-plt.show()
+Data = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_index(
+    by='priceStringDate')
+print(dfevoo.info())
+print(Data)
 
-# quit(0)
 # Long Short Term Memory (LSTM)
 
 # setting index
-Data.index = Data.priceStringDate
-Data.drop('priceStringDate', axis=1, inplace=True)
+# Data.index = Data.priceStringDate
+# Data.drop('priceStringDate', axis=1, inplace=True)
 
-#creating train and test sets
+# creating train and test sets
 dataset = Data.values
-print(dataset)
-# quit(0)
-#print(dataset.info())
+
+# print(dataset.info())
 
 train = dataset[0:7052, :]
 valid = dataset[7052:, :]
@@ -110,7 +187,7 @@ model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 # Algorithm Training
 model.fit(x_train, y_train, epochs=10, batch_size=132, verbose=1)
 
-#evaluate the model
+# evaluate the model
 train_acc = model.evaluate(x_train, y_train, verbose=1)
 print('train_acc')
 print(train_acc)
@@ -142,25 +219,12 @@ rms = np.sqrt(np.mean(np.power((valid - closing_price), 2)))
 print('rms')
 print(rms)
 
-print(valid)
-print(closing_price)
-
-# Visualising the results
-plt.plot(valid, color = 'red', label = 'Real Google Stock Price')
-plt.plot(closing_price, color = 'blue', label = 'Predicted Google Stock Price')
-plt.title('Google Stock Price Prediction')
-plt.xlabel('priceStringDate')
-plt.ylabel('price')
-plt.legend()
-plt.show()
-
-quit(0)
 # plotting
 plt.figure(figsize=(10, 6))
 plt.plot(Data, color='blue', label='Actual EVOO Stock Price')
 plt.plot(closing_price, color='red', label='Predicted EVOO Stock Price')
 plt.title('Stock Price Prediction')
-plt.xlabel('priceStringDate')
-plt.ylabel('price')
+plt.xlabel('Date')
+plt.ylabel('Stock Price')
 plt.legend()
 plt.show()
