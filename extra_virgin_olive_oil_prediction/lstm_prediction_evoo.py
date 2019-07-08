@@ -34,21 +34,22 @@ dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
 ax = plt.gca()
 dfevoo.plot(kind='line', x='priceStringDate', y='price', ax=ax, figsize=(18, 16))
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-Data = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_index(
+Data = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
   by='priceStringDate')
-print(dfevoo.info())
-print(Data)
+# print(dfevoo.info())
 
 
+# quit(0)
 # Long Short Term Memory (LSTM)
 
 # setting index
-# Data.index = Data.priceStringDate
-# Data.drop('priceStringDate', axis=1, inplace=True)
+Data.index = Data.priceStringDate
+Data.drop('priceStringDate', axis=1, inplace=True)
 
 #creating train and test sets
 dataset = Data.values
-
+print(dataset)
+# quit(0)
 #print(dataset.info())
 
 train = dataset[0:7052, :]
@@ -139,12 +140,22 @@ rms = np.sqrt(np.mean(np.power((valid - closing_price), 2)))
 print('rms')
 print(rms)
 
+# Visualising the results
+plt.plot(Data, color = 'red', label = 'Real Google Stock Price')
+plt.plot(closing_price, color = 'blue', label = 'Predicted Google Stock Price')
+plt.title('Google Stock Price Prediction')
+plt.xlabel('priceStringDate')
+plt.ylabel('price')
+plt.legend()
+plt.show()
+
+quit(0)
 # plotting
 plt.figure(figsize=(10, 6))
 plt.plot(Data, color='blue', label='Actual EVOO Stock Price')
 plt.plot(closing_price, color='red', label='Predicted EVOO Stock Price')
 plt.title('Stock Price Prediction')
-plt.xlabel('Date')
-plt.ylabel('Stock Price')
+plt.xlabel('priceStringDate')
+plt.ylabel('price')
 plt.legend()
 plt.show()
