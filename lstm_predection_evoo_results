@@ -9,3 +9,12 @@ train_acc
 [0.015171563056205959, 0.00014302059496567506]
 rms
 333.3792
+
+
+# Algorithm Training
+model.fit(x_train, y_train, epochs=10, batch_size=132, verbose=1)
+# Prepare our test inputs
+inputs = Data[len(Data) - len(valid) - 60:].values
+dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
+
+results
