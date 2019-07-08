@@ -24,7 +24,7 @@ parsed = json.loads(data)
 
 # dataframe
 df = pd.DataFrame(parsed)
-# print(df)
+
 
 
 ####### extra virgin olive oil (up to 0,8°)
@@ -33,19 +33,24 @@ dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
 # print(dfevoo)
 ax = plt.gca()
 dfevoo.plot(kind='line', x='priceStringDate', y='price', ax=ax, figsize=(18, 16))
+dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
 Data = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_index(
-    ascending=True, axis=0)
+  by='priceStringDate')
+print(dfevoo.info())
+print(Data)
+
 
 # Long Short Term Memory (LSTM)
 
-
 # setting index
-Data.index = Data.priceStringDate
-Data.drop('priceStringDate', axis=1, inplace=True)
+# Data.index = Data.priceStringDate
+# Data.drop('priceStringDate', axis=1, inplace=True)
 
-# creating train and test sets
+#creating train and test sets
 dataset = Data.values
-dataset = dataset.astype('float32')
+
+#print(dataset.info())
+
 train = dataset[0:7052, :]
 valid = dataset[7052:, :]
 
@@ -100,10 +105,11 @@ model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
 # Algorithm Training
-model.fit(x_train, y_train, epochs=100, batch_size=32, verbose=1)
+model.fit(x_train, y_train, epochs=10, batch_size=132, verbose=1)
 
 #evaluate the model
 train_acc = model.evaluate(x_train, y_train, verbose=1)
+print('train_acc')
 print(train_acc)
 
 # Prepare our test inputs
@@ -130,6 +136,7 @@ closing_price = scaler.inverse_transform(closing_price)
 
 # root mean square is a measure of the imperfection of the fit of the estimator to the data.
 rms = np.sqrt(np.mean(np.power((valid - closing_price), 2)))
+print('rms')
 print(rms)
 
 # plotting
