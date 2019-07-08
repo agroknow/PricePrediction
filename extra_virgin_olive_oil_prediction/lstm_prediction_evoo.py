@@ -31,7 +31,8 @@ df = pd.DataFrame(parsed)
 
 dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
-# print(dfevoo)
+print(dfevoo)
+# quit(0)
 ax = plt.gca()
 dfevoo.plot(kind='line', x='priceStringDate', y='price', ax=ax, figsize=(18, 16))
 plt.show()
@@ -54,8 +55,8 @@ print(dataset)
 # quit(0)
 #print(dataset.info())
 
-train = dataset[0:7052, :]
-valid = dataset[7052:, :]
+train = dataset[0:int(0.8*(len(dataset))), :]
+valid = dataset[int(0.8*(len(dataset))):, :]
 
 print(Data.shape, train.shape, valid.shape)
 
