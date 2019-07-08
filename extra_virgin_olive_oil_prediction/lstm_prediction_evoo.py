@@ -33,6 +33,7 @@ dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
 # print(dfevoo)
 ax = plt.gca()
 dfevoo.plot(kind='line', x='priceStringDate', y='price', ax=ax, figsize=(18, 16))
+plt.show()
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
 Data = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
   by='priceStringDate')
@@ -141,7 +142,7 @@ print('rms')
 print(rms)
 
 # Visualising the results
-plt.plot(Data, color = 'red', label = 'Real Google Stock Price')
+plt.plot(valid, color = 'red', label = 'Real Google Stock Price')
 plt.plot(closing_price, color = 'blue', label = 'Predicted Google Stock Price')
 plt.title('Google Stock Price Prediction')
 plt.xlabel('priceStringDate')

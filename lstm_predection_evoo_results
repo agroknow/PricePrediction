@@ -18,3 +18,8 @@ inputs = Data[len(Data) - len(valid) - 60:].values
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
 
 results
+loss: 0.0160 - acc: 1.4302e-04
+train_acc
+[0.015939833663181014, 0.00014302059496567506]
+rms
+135.63063135034355
