@@ -1,25 +1,9 @@
-# Algorithm Training
-model.fit(x_train, y_train, epochs=10, batch_size=132, verbose=1)
-# Prepare our test inputs
-inputs = Data[len(Data) - len(valid) - 60:].values
+#if include
+dfevoo=dfevoo.groupby('priceStringDate').mean().reset_index()
+results rms=13.826264077910224
 
-results
-loss: 0.0154 - acc: 1.4302e-04
-train_acc
-[0.015171563056205959, 0.00014302059496567506]
-rms
-333.3792
+else if include
+dfevoo = dfevoo.drop_duplicates(subset ="priceStringDate", keep = 'first')
+results rms=15.787753289310023
 
 
-# Algorithm Training
-model.fit(x_train, y_train, epochs=10, batch_size=132, verbose=1)
-# Prepare our test inputs
-inputs = Data[len(Data) - len(valid) - 60:].values
-dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-
-results
-loss: 0.0160 - acc: 1.4302e-04
-train_acc
-[0.015939833663181014, 0.00014302059496567506]
-rms
-135.63063135034355

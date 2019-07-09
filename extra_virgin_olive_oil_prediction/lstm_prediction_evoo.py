@@ -26,21 +26,33 @@ parsed = json.loads(data)
 df = pd.DataFrame(parsed)
 
 
-
+prouped_ordered = df.groupby(['product']).size().reset_index(name='counts').sort_values('counts')
+# print(prouped_ordered)
 ####### extra virgin olive oil (up to 0,8°)
 
-dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
+#dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
+dfevoo = df[df['product'] == 'virgin olive oil (up to 2°)']
+
+
+
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
-print(dfevoo)
-# quit(0)
-ax = plt.gca()
-dfevoo.plot(kind='line', x='priceStringDate', y='price', ax=ax, figsize=(18, 16))
-plt.show()
+
+
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-Data = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
+
+
+
+# Select all duplicate rows based on one column
+# dfevoo[dfevoo.duplicated(['priceStringDate'])]
+dfevoo=dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
   by='priceStringDate')
-# print(dfevoo.info())
-plt.show()
+dfevoo=pd.DataFrame(dfevoo)
+Data=dfevoo
+#dfevoo = dfevoo.drop_duplicates(subset ="priceStringDate", keep = 'first')
+# print(dfevoo)
+
+dfevoo=dfevoo.groupby('priceStringDate').mean().reset_index()
+
 
 # quit(0)
 # Long Short Term Memory (LSTM)
@@ -109,7 +121,12 @@ model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
 # Algorithm Training
-model.fit(x_train, y_train, epochs=10, batch_size=132, verbose=1)
+fitted_model = model.fit(x_train, y_train, epochs=50, batch_size=120, verbose=1)
+
+plt.plot(fitted_model.history['loss'])
+plt.plot(fitted_model.history['acc'])
+plt.show()
+
 
 #evaluate the model
 train_acc = model.evaluate(x_train, y_train, verbose=1)
@@ -143,25 +160,31 @@ rms = np.sqrt(np.mean(np.power((valid - closing_price), 2)))
 print('rms')
 print(rms)
 
-print(valid)
-print(closing_price)
+
 
 # Visualising the results
 plt.plot(valid, color = 'red', label = 'Real Google Stock Price')
-plt.plot(closing_price, color = 'blue', label = 'Predicted Google Stock Price')
-plt.title('Google Stock Price Prediction')
+plt.plot(closing_price, color = 'blue', label = 'Predicted  Stock Price')
+plt.title('Stock Price Prediction')
 plt.xlabel('priceStringDate')
 plt.ylabel('price')
 plt.legend()
 plt.show()
 
-quit(0)
+
 # plotting
 plt.figure(figsize=(10, 6))
-plt.plot(Data, color='blue', label='Actual EVOO Stock Price')
+plt.plot(valid, color='blue', label='Actual EVOO Stock Price')
 plt.plot(closing_price, color='red', label='Predicted EVOO Stock Price')
 plt.title('Stock Price Prediction')
 plt.xlabel('priceStringDate')
 plt.ylabel('price')
 plt.legend()
 plt.show()
+
+#for plotting
+train = dataset[0:int(0.8*(len(dataset))), :]
+valid = dataset[int(0.8*(len(dataset))):, :]
+valid['Predictions'] = closing_price
+plt.plot(train['price'])
+plt.plot(valid[['price','Predictions']])
