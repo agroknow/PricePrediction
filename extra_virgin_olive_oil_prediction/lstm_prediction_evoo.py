@@ -10,6 +10,7 @@ from keras.layers import LSTM
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
+from keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
 
 # from fastai.structured import add_datepart
 scaler = MinMaxScaler(feature_range=(0, 1))
@@ -78,13 +79,13 @@ print(Data.shape, train.shape, valid.shape)
 # Data Normalization
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled_data = scaler.fit_transform(dataset)
-N=1
+N=10
 imageDir = "plots/"
-count=10
+count=1
 while (count<N):
     # Convert Training Data to Right Shape
     lb=count
-    flag = 'result from=%s' % str(count)
+    flag= 'result from %s' % str(count)
     x_train = []
     y_train = []
     # execute a loop that starts from 61st record and stores all the previous 60 records to the x_train list. The 61st record is stored in the y_trainlabels list.
@@ -126,13 +127,15 @@ while (count<N):
 
     # Model Compilation
     model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
-
+    keras_callbacks = [
+        EarlyStopping(monitor='val_mean_absolute_error', patience=20, verbose=0)
+    ]
     # Algorithm Training
-    fitted_model = model.fit(x_train, y_train, epochs=20, batch_size=120, verbose=1)
+    fitted_model = model.fit(x_train, y_train, epochs=50, batch_size=120, verbose=1)
 
     plt.plot(fitted_model.history['loss'])
     plt.plot(fitted_model.history['acc'])
-    plt.savefig('%s.png' % flag, bbox_inches='tight')
+    plt.savefig('%s history.png' % flag, bbox_inches='tight')
     plt.show()
 
 
@@ -168,12 +171,13 @@ while (count<N):
     print('rms')
     print(rms)
 
+    flag2 = 'rms %s  ' % str(rms)
 
 
     # Visualising the results
     plt.plot(valid, color = 'red', label = 'Real Google Stock Price')
     plt.plot(closing_price, color = 'blue', label = 'Predicted  Stock Price')
-    plt.title('Stock Price Prediction')
+    plt.title('Stock Price Prediction' + flag2)
     plt.xlabel('priceStringDate')
     plt.ylabel('price')
     plt.legend()
@@ -191,4 +195,4 @@ while (count<N):
     plt.legend()
     plt.show()
 
-    count = count-1
+    count = count+1
