@@ -15,12 +15,12 @@ import matplotlib.pyplot as plt
 
 from subprocess import check_output
 
-print(check_output(["ls", "./input"]).decode("utf8"))
-
-# Any results you write to the current directory are saved as output.
-
-data = pd.read_csv('./input/all_stocks_5yr.csv')
-cl = data[data['Name'] == 'MMM'].Close
+# print(check_output(["ls", "./input"]).decode("utf8"))
+#
+# # Any results you write to the current directory are saved as output.
+#
+# data = pd.read_csv('./input/all_stocks_5yr.csv')
+# cl = data[data['Name'] == 'MMM'].Close
 
 # FETCH ON A DAY BASIS
 # product_query = "{ \"aggregations\": { \"years\": { \"attribute\": \"products.value.keyword\", \"size\": 15000 }}, \"apikey\": \"32aa618e-be8b-32da-bc99-5172f90a903e\", \"detail\": true, \"entityType\": \"incident\"}"
