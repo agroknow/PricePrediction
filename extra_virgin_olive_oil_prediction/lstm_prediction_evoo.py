@@ -11,7 +11,7 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
 from keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
-
+from sklearn.metrics import accuracy_score
 # from fastai.structured import add_datepart
 scaler = MinMaxScaler(feature_range=(0, 1))
 
@@ -79,7 +79,7 @@ print(Data.shape, train.shape, valid.shape)
 # Data Normalization
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled_data = scaler.fit_transform(dataset)
-N=10
+N=30
 imageDir = "plots/"
 count=1
 while (count<N):
@@ -89,12 +89,11 @@ while (count<N):
     x_train = []
     y_train = []
     # execute a loop that starts from 61st record and stores all the previous 60 records to the x_train list. The 61st record is stored in the y_trainlabels list.
-    for i in range(60, len(train)):
+    for i in range(lb, len(train)):
         x_train.append(scaled_data[i - lb:i, 0])
         y_train.append(scaled_data[i, 0])
 
     # convert both list to the numpy array before training
-
     x_train = np.array(x_train)
     y_train = np.array(y_train)
 
@@ -113,13 +112,13 @@ while (count<N):
     model.add(Dropout(0.2))
 
     # add three more LSTM and dropout layers to our model
-    model.add(LSTM(units=50, return_sequences=True))
+    model.add(LSTM(units=100, return_sequences=True))
     model.add(Dropout(0.2))
 
-    model.add(LSTM(units=50, return_sequences=True))
+    model.add(LSTM(units=100, return_sequences=True))
     model.add(Dropout(0.2))
 
-    model.add(LSTM(units=50))
+    model.add(LSTM(units=100))
     model.add(Dropout(0.2))
 
     # add a dense layer at the end of the model. The number of neurons in the dense layer will be set to 1 since we want to predict a single value in the output.
@@ -131,11 +130,12 @@ while (count<N):
         EarlyStopping(monitor='val_mean_absolute_error', patience=20, verbose=0)
     ]
     # Algorithm Training
-    fitted_model = model.fit(x_train, y_train, epochs=50, batch_size=120, verbose=1)
+    epo=500
+    fitted_model = model.fit(x_train, y_train, epochs=epo, batch_size=120, verbose=1)
 
     plt.plot(fitted_model.history['loss'])
     plt.plot(fitted_model.history['acc'])
-    plt.savefig('%s history.png' % flag, bbox_inches='tight')
+    #plt.savefig('%s history.png' % flag, bbox_inches='tight')
     plt.show()
 
 
@@ -173,11 +173,16 @@ while (count<N):
 
     flag2 = 'rms %s  ' % str(rms)
 
+    # plt.title('Accuracy')
+    # plt.plot(fitted_model.history['acc'], label='train')
+    # plt.plot(fitted_model.history['val_acc'], label='test')
+    # plt.legend()
+    # plt.show()
 
     # Visualising the results
     plt.plot(valid, color = 'red', label = 'Real Google Stock Price')
     plt.plot(closing_price, color = 'blue', label = 'Predicted  Stock Price')
-    plt.title('Stock Price Prediction' + flag2)
+    plt.title('Stock Price Prediction  ' + flag2)
     plt.xlabel('priceStringDate')
     plt.ylabel('price')
     plt.legend()
