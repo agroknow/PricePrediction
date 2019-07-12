@@ -59,7 +59,7 @@ imageDir = "plots/"
 df_milk = dfFAO[dfFAO['product'] == 'milk and milk products']
 ax = plt.gca()
 df_milk.plot(kind='line',x='priceStringDate',y='price',ax=ax)
-# plt.savefig(imageDir + 'milk.png', bbox_inches='tight')
+plt.savefig(imageDir + 'milk.png', bbox_inches='tight')
 #plt.show()
 # #Visualization
 #
