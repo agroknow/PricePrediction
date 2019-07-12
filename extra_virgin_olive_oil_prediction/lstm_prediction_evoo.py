@@ -51,11 +51,12 @@ dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
 dfevoo=dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
   by='priceStringDate')
 dfevoo=pd.DataFrame(dfevoo)
+dfevoo=dfevoo.groupby('priceStringDate').mean().reset_index()
 Data=dfevoo
 #dfevoo = dfevoo.drop_duplicates(subset ="priceStringDate", keep = 'first')
 # print(dfevoo)
 
-dfevoo=dfevoo.groupby('priceStringDate').mean().reset_index()
+
 
 
 # quit(0)
@@ -79,13 +80,13 @@ print(Data.shape, train.shape, valid.shape)
 # Data Normalization
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled_data = scaler.fit_transform(dataset)
-N=30
+N = 2
 imageDir = "plots/"
-count=1
+count = 1
 while (count<N):
     # Convert Training Data to Right Shape
-    lb=count
-    flag= 'result from %s' % str(count)
+    lb = count
+    flag = 'result from %s' % str(count)
     x_train = []
     y_train = []
     # execute a loop that starts from 61st record and stores all the previous 60 records to the x_train list. The 61st record is stored in the y_trainlabels list.
@@ -144,6 +145,7 @@ while (count<N):
     print('train_acc')
     print(train_acc)
 
+
     # Prepare our test inputs
     inputs = Data[len(Data) - len(valid) - lb:].values
 
@@ -167,11 +169,11 @@ while (count<N):
     closing_price = scaler.inverse_transform(closing_price)
 
     # root mean square is a measure of the imperfection of the fit of the estimator to the data.
-    rms = np.sqrt(np.mean(np.power((valid - closing_price), 2)))
-    print('rms')
-    print(rms)
+    # rms = np.sqrt(np.mean(np.power((valid - closing_price), 2)))
+    # print('rms')
+    # print(rms)
 
-    flag2 = 'rms %s  ' % str(rms)
+    # flag2 = 'rms %s  ' % str(rms)
 
     # plt.title('Accuracy')
     # plt.plot(fitted_model.history['acc'], label='train')
@@ -180,9 +182,9 @@ while (count<N):
     # plt.show()
 
     # Visualising the results
-    plt.plot(valid, color = 'red', label = 'Real Google Stock Price')
-    plt.plot(closing_price, color = 'blue', label = 'Predicted  Stock Price')
-    plt.title('Stock Price Prediction  ' + flag2)
+    plt.plot(valid, color = 'red', label = 'Real Stock Price')
+    plt.plot(closing_price, color = 'blue', label = 'Predicted Stock Price')
+    plt.title('Stock Price Prediction  ' )
     plt.xlabel('priceStringDate')
     plt.ylabel('price')
     plt.legend()
@@ -198,6 +200,7 @@ while (count<N):
     plt.xlabel('priceStringDate')
     plt.ylabel('price')
     plt.legend()
+
     plt.show()
 
     count = count+1
