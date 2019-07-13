@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
 from sklearn.metrics import accuracy_score
+
 # from fastai.structured import add_datepart
 scaler = MinMaxScaler(feature_range=(0, 1))
 
@@ -35,27 +36,23 @@ df = pd.read_csv("food_dataset.csv")
 ####### extra virgin olive oil (up to 0,8°)
 
 dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
-#dfevoo = df[df['product'] == 'virgin olive oil (up to 2°)']
-
+# dfevoo = df[df['product'] == 'virgin olive oil (up to 2°)']
 
 
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
 
-
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-
-
 
 # Select all duplicate rows based on one column
 # dfevoo[dfevoo.duplicated(['priceStringDate'])]
-dfevoo=dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
-  by='priceStringDate')
-dfevoo=pd.DataFrame(dfevoo)
-dfevoo=dfevoo.groupby('priceStringDate').mean().reset_index()
-Data=dfevoo
-#dfevoo = dfevoo.drop_duplicates(subset ="priceStringDate", keep = 'first')
+dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
+    by='priceStringDate')
+dfevoo = pd.DataFrame(dfevoo)
+dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
+Data = dfevoo
+# dfevoo = dfevoo.drop_duplicates(subset ="priceStringDate", keep = 'first')
 # print(dfevoo)
-
+print(df['country'])
 
 
 
@@ -66,24 +63,24 @@ Data=dfevoo
 Data.index = Data.priceStringDate
 Data.drop('priceStringDate', axis=1, inplace=True)
 
-#creating train and test sets
+# creating train and test sets
 dataset = Data.values
 print(dataset)
 # quit(0)
-#print(dataset.info())
+# print(dataset.info())
 
-train = dataset[0:int(0.8*(len(dataset))), :]
-valid = dataset[int(0.8*(len(dataset))):, :]
+train = dataset[0:int(0.8 * (len(dataset))), :]
+valid = dataset[int(0.2 * (len(dataset))):, :]
 
 print(Data.shape, train.shape, valid.shape)
 
 # Data Normalization
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled_data = scaler.fit_transform(dataset)
-N = 2
+N = 70
 imageDir = "plots/"
-count = 1
-while (count<N):
+count = 53
+while (count < N):
     # Convert Training Data to Right Shape
     lb = count
     flag = 'result from %s' % str(count)
@@ -131,20 +128,18 @@ while (count<N):
         EarlyStopping(monitor='val_mean_absolute_error', patience=20, verbose=0)
     ]
     # Algorithm Training
-    epo=500
+    epo = 100
     fitted_model = model.fit(x_train, y_train, epochs=epo, batch_size=120, verbose=1)
 
     plt.plot(fitted_model.history['loss'])
     plt.plot(fitted_model.history['acc'])
-    #plt.savefig('%s history.png' % flag, bbox_inches='tight')
+    # plt.savefig('%s history.png' % flag, bbox_inches='tight')
     plt.show()
 
-
-    #evaluate the model
+    # evaluate the model
     train_acc = model.evaluate(x_train, y_train, verbose=1)
     print('train_acc')
     print(train_acc)
-
 
     # Prepare our test inputs
     inputs = Data[len(Data) - len(valid) - lb:].values
@@ -169,9 +164,9 @@ while (count<N):
     closing_price = scaler.inverse_transform(closing_price)
 
     # root mean square is a measure of the imperfection of the fit of the estimator to the data.
-    # rms = np.sqrt(np.mean(np.power((valid - closing_price), 2)))
-    # print('rms')
-    # print(rms)
+    rms = np.sqrt(np.mean(np.power((valid - closing_price), 2)))
+    print('rms')
+    print(rms)
 
     # flag2 = 'rms %s  ' % str(rms)
 
@@ -182,15 +177,14 @@ while (count<N):
     # plt.show()
 
     # Visualising the results
-    plt.plot(valid, color = 'red', label = 'Real Stock Price')
-    plt.plot(closing_price, color = 'blue', label = 'Predicted Stock Price')
-    plt.title('Stock Price Prediction  ' )
+    plt.plot(valid, color='red', label='Real Stock Price')
+    plt.plot(closing_price, color='blue', label='Predicted Stock Price')
+    plt.title('Stock Price Prediction  ')
     plt.xlabel('priceStringDate')
     plt.ylabel('price')
     plt.legend()
     plt.savefig('%s.png' % flag, bbox_inches='tight')
     plt.show()
-
 
     # plotting
     plt.figure(figsize=(10, 6))
@@ -203,4 +197,4 @@ while (count<N):
 
     plt.show()
 
-    count = count+1
+    count = count + 1
