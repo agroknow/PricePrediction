@@ -7,68 +7,135 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
 from keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
 from sklearn.metrics import accuracy_score
 
-# from fastai.structured import add_datepart
-scaler = MinMaxScaler(feature_range=(0, 1))
 
-sns.set_style('darkgrid')
-
-# # take json data from API
-# response = requests.get("http://148.251.22.254:8080/price-api-1.0/price/findAll")
-# data = response.text
-# parsed = json.loads(data)
-# # print(json.dumps(parsed, indent=4))
-#
-# # dataframe
-# df = pd.DataFrame(parsed)
-
-df = pd.read_csv("food_dataset.csv")
-# Preview the first 5 lines of the loaded data
+# https://stackoverflow.com/questions/42532386/how-to-work-with-multiple-inputs-for-lstm-in-keras
+# interesting: https://datascience.stackexchange.com/questions/17024/rnns-with-multiple-features
 
 
-# prouped_ordered = df.groupby(['product']).size().reset_index(name='counts').sort_values('counts')
-# print(prouped_ordered)
-####### extra virgin olive oil (up to 0,8°)
-
-dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
-# dfevoo = df[df['product'] == 'virgin olive oil (up to 2°)']
+test_date = '2019-01-01'
 
 
+def read_cleanse():
+    df = pd.read_csv("food_dataset.csv")
+
+    dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
+    dfevoo = dfevoo[dfevoo['country'] == 'greece']
+    dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
+    dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
+        by='priceStringDate')
+    dfevoo = pd.DataFrame(dfevoo)
+    dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
+    dfevoo['date'] = pd.to_datetime(dfevoo['priceStringDate'])
+    dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
+    dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
+    dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
+
+    dfevoo = dfevoo[dfevoo['date'] < test_date]
+
+    columns = ['year', 'month', 'day', 'price']
+    dataset = dfevoo[columns]
+    return dataset
+
+
+dataset = read_cleanse()
+
+dataset = dataset.dropna()
+target = 'price'
+
+train_perc = 0.9
+
+train_dataset = dataset[:int(len(dataset) * train_perc)]  # .sample(frac=0.8, random_state=0)
+test_dataset = dataset.drop(train_dataset.index)
+
+train_stats = train_dataset.describe()
+
+print(train_stats)
+
+train_stats.pop(target)
+train_stats = train_stats.transpose()
+
+train_labels = train_dataset.pop(target)
+test_labels = test_dataset.pop(target)
+
+
+def norm(x, stats):
+    return (x - stats['mean']) / stats['std']
+
+
+normed_train_data = norm(train_dataset, train_stats)
+normed_test_data = norm(test_dataset, train_stats)
+
+
+def build_model():
+    t_model = Sequential()
+    t_model.add(Dense(64, activation="relu", input_shape=[len(train_dataset.keys())]))
+    t_model.add(Dense(64, activation="relu"))
+    t_model.add(Dense(1))
+    t_model.compile(loss='mean_squared_error',
+                    optimizer='nadam',
+                    metrics=['mean_absolute_error', 'mean_squared_error'])
+    return t_model
+
+
+model = build_model()
+
+model.summary()
+
+early_stop = EarlyStopping(monitor='val_loss', patience=20)
+
+history = model.fit(normed_train_data, train_labels, epochs=500,
+                    validation_split=0.2, verbose=0, callbacks=[early_stop])
+
+test_df = pd.read_csv("food_dataset.csv")
+
+dfevoo = test_df[test_df['product'] == 'extra virgin olive oil (up to 0,8°)']
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
-
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-
-# Select all duplicate rows based on one column
-# dfevoo[dfevoo.duplicated(['priceStringDate'])]
 dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
     by='priceStringDate')
 dfevoo = pd.DataFrame(dfevoo)
 dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
-Data = dfevoo
-# dfevoo = dfevoo.drop_duplicates(subset ="priceStringDate", keep = 'first')
-# print(dfevoo)
+dfevoo['date'] = pd.to_datetime(dfevoo['priceStringDate'])
+dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
+dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
+dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
 
-# Long Short Term Memory (LSTM)
+dfevoo = dfevoo[dfevoo['date'] >= test_date]
 
-# setting index
-Data.index = Data.priceStringDate
-Data.drop('priceStringDate', axis=1, inplace=True)
+columns = ['year', 'month', 'day', 'price']
+test_df = dfevoo[columns]
+unknown_stats = test_df.describe()
 
-# creating train and test sets
-dataset = Data.values
-print(dataset)
-# quit(0)
-# print(dataset.info())
+print(unknown_stats)
 
-train = dataset[0:int(0.9 * (len(dataset))), :]
-valid = dataset[int(0.1 * (len(dataset))):, :]
+unknown_stats.pop(target)
+unknown_stats = unknown_stats.transpose()
 
+unknown_labels = test_df.pop(target)
 
+normed_unknown_data = norm(test_df, train_stats)
+unknown_predictions = model.predict(normed_unknown_data).flatten()
+
+print(unknown_predictions)
+print(unknown_labels)
+
+# unknown_predictions = unknown_predictions - 40
+print(unknown_predictions)
+
+plt.plot(unknown_predictions)
+plt.plot(unknown_labels.values)
+plt.title('price prediction')
+plt.legend(['Predictions', 'Actual'], loc='upper left')
+plt.show()
+
+quit(0)
 
 print(Data.shape, train.shape, valid.shape)
 
