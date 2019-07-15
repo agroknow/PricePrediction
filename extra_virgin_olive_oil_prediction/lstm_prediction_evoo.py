@@ -52,11 +52,7 @@ dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
 Data = dfevoo
 # dfevoo = dfevoo.drop_duplicates(subset ="priceStringDate", keep = 'first')
 # print(dfevoo)
-print(df['country'])
 
-
-
-# quit(0)
 # Long Short Term Memory (LSTM)
 
 # setting index
@@ -69,17 +65,19 @@ print(dataset)
 # quit(0)
 # print(dataset.info())
 
-train = dataset[0:int(0.8 * (len(dataset))), :]
-valid = dataset[int(0.2 * (len(dataset))):, :]
+train = dataset[0:int(0.9 * (len(dataset))), :]
+valid = dataset[int(0.1 * (len(dataset))):, :]
+
+
 
 print(Data.shape, train.shape, valid.shape)
 
 # Data Normalization
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled_data = scaler.fit_transform(dataset)
-N = 70
+N = 80
 imageDir = "plots/"
-count = 53
+count = 50
 while (count < N):
     # Convert Training Data to Right Shape
     lb = count
@@ -128,7 +126,7 @@ while (count < N):
         EarlyStopping(monitor='val_mean_absolute_error', patience=20, verbose=0)
     ]
     # Algorithm Training
-    epo = 100
+    epo = 50
     fitted_model = model.fit(x_train, y_train, epochs=epo, batch_size=120, verbose=1)
 
     plt.plot(fitted_model.history['loss'])

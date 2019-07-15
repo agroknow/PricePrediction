@@ -64,7 +64,7 @@ def api_training():
     # creating train and test sets
     dataset = Data.values
     train = dataset[0:int(0.8 * (len(dataset))), :]
-    valid = dataset[int(0.8 * (len(dataset))):, :]
+    valid = dataset[int(0.2 * (len(dataset))):, :]
 
     # Data Normalization
     scaler = MinMaxScaler(feature_range=(0, 1))
@@ -121,22 +121,24 @@ def api_training():
     import pickle
 
     pickle.dump(fitted_model, open("model_fit.pkl", "wb"), pickle.HIGHEST_PROTOCOL)
-    # evaluate the model
-    train_acc = model.evaluate(x_train, y_train, verbose=1)
+
 
     import sqlite3
     conn = sqlite3.connect('Train_results.db')
 
+
     c = conn.cursor()
     c.execute('''
-       INSERT INTO TrainingResults(Product_Name,Country_Name,DataSource,Model_fit)
-       VALUES (?,?,?,?) ''', (product, country, data_Source, model_fit.pkl))
+       INSERT INTO TrainingResults(Product_Name,Country_Name,Data_Source,Model_fit)
+       VALUES (?,?,?,?) ''', (product, country, data_Source, open('model_fit.pkl', 'rb').read()))
 
     c.execute('''
     SELECT *
     FROM TrainingResults
               ''')
     print(c.fetchall())
+    conn.commit()
+
     return "geiaa"
     # return jsonify(fitted_model.tolist())
 
@@ -148,7 +150,7 @@ def api_prediction():
     product = parameters.get('product')
     country = parameters.get('country')
     data_Source = parameters.get('data_Source')
-    date = parameters.get('date')
+    #date = parameters.get('date')
     if not (product or country or data_Source):
         return page_not_found(404)
     import pandas as pd
@@ -169,46 +171,49 @@ def api_prediction():
     conn = sqlite3.connect('Train_results.db')
     c = conn.cursor()
     results = c.execute(
-        'SELECT Model_fit FROM TrainingResults WHERE Product_Name=? and Country_Name=? and DataSource=?',
+        'SELECT Model_fit FROM TrainingResults WHERE Product_Name=? and Country_Name=? and Data_Source=?',
         (product, country, data_Source)).fetchall()
+    print('to brhka')
     if not results:
         results = api_training()
-
-    dfevoo = pd.read_csv("food_dataset.csv")
-    dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-    fevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
-        by='priceStringDate')
-    dfevoo = pd.DataFrame(dfevoo)
-    dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
-    Data = dfevoo
-    # Prepare our test inputs
-    dataset = Data.values
-    lb = 1
-    valid = dataset[int(0.2 * (len(dataset))):, :]
-    inputs = Data[len(Data) - len(valid) - lb:].values
-
-    # Scale our test data
-    inputs = inputs.reshape(-1, 1)
-    inputs = scaler.transform(inputs)
-
-    # final test input
-    X_test = []
-    for i in range(lb, inputs.shape[0]):
-        X_test.append(inputs[i - lb:i, 0])
-
-    # Convert our data into the three-dimensional format which can be used as input to the LSTM.
-    X_test = np.array(X_test)
-    X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
-
-    # Making Predictions
-    closing_price = model.predict(X_test)
-    # reverse the scaled prediction back to their actual values.
-    # Use the ìnverse_transform method of the scaler object we created during training
-    closing_price = scaler.inverse_transform(closing_price)
-
-
-# return jsonify(closing_price.tolist())
-    return jsonify(closing_price)
+        print('de to brhka')
+#
+#     dfevoo = pd.read_csv("food_dataset.csv")
+#     dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
+#     fevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
+#         by='priceStringDate')
+#     dfevoo = pd.DataFrame(dfevoo)
+#     dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
+#     Data = dfevoo
+#     # Prepare our test inputs
+#     dataset = Data.values
+#     lb = 1
+#     valid = dataset[int(0.2 * (len(dataset))):, :]
+#     inputs = Data[len(Data) - len(valid) - lb:].values
+#
+#     # Scale our test data
+#     inputs = inputs.reshape(-1, 1)
+#     inputs = scaler.transform(inputs)
+#
+#     # final test input
+#     X_test = []
+#     for i in range(lb, inputs.shape[0]):
+#         X_test.append(inputs[i - lb:i, 0])
+#
+#     # Convert our data into the three-dimensional format which can be used as input to the LSTM.
+#     X_test = np.array(X_test)
+#     X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+#
+#     # Making Predictions
+#     closing_price = model.predict(X_test)
+#     # reverse the scaled prediction back to their actual values.
+#     # Use the ìnverse_transform method of the scaler object we created during training
+#     closing_price = scaler.inverse_transform(closing_price)
+#
+#
+# # return jsonify(closing_price.tolist())
+#     return jsonify(closing_price)
+    return "j"
 
 
 @app.errorhandler(404)
