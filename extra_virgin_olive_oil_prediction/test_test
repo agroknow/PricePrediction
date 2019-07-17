@@ -33,28 +33,20 @@ def read_cleanse():
     dfevoo = pd.DataFrame(dfevoo)
     dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
     dfevoo['date'] = pd.to_datetime(dfevoo['priceStringDate'])
-    # dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
-    # dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
-    # dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
+    dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
+    dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
+    dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
 
-    # dfevoo = dfevoo[dfevoo['date'] < test_date]
-    #
-    # # columns = ['year', 'month', 'day', 'price']
-    # columns = ['date']
-    # dataset = dfevoo[columns]
+    dfevoo = dfevoo[dfevoo['date'] < test_date]
+
+    columns = ['year', 'month', 'day', 'price']
+    #columns = ['date']
+    dataset = dfevoo[columns]
     return dfevoo
 
 
-dfevoo = read_cleanse()
-print(dfevoo)
-columns = ['date']
-dataset = dfevoo[columns]
-dataset= dfevoo[dfevoo['date'] < test_date]
+dataset = read_cleanse()
 
-print(dataset)
-
-print(dataset)
-quit(0)
 
 dataset = dataset.dropna()
 target = 'price'
@@ -65,7 +57,6 @@ train_dataset = dataset[:int(len(dataset) * train_perc)]  # .sample(frac=0.8, ra
 test_dataset = dataset.drop(train_dataset.index)
 print(train_dataset)
 train_stats = train_dataset.describe()
-quit(0)
 #print(train_stats)
 
 train_stats.pop(target)
