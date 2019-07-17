@@ -107,7 +107,7 @@ model.summary()
 early_stop = EarlyStopping(monitor='val_loss', patience=20)
 
 history = model.fit(normed_train_data, train_labels, epochs=500,
-                    validation_split=0.2, verbose=0, callbacks=[early_stop])
+                    validation_split=0.2, verbose=1, callbacks=[early_stop])
 
 
 test_df = pd.read_csv("food_dataset.csv")

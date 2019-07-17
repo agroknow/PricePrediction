@@ -85,7 +85,7 @@ print(scaled_data)
 lb = 10
 normed_train_data = []
 for i in range(lb, len(train_dataset)):
-    normed_train_data.append(scaled_data[i - lb:i]['year'])
+    normed_train_data.append(scaled_data[i - lb:i]['month'])
 
 normed_train_data = np.array(normed_train_data)
 normed_train_data = np.reshape(normed_train_data, (normed_train_data.shape[0], normed_train_data.shape[1], 1))
@@ -122,7 +122,7 @@ early_stop = EarlyStopping(monitor='mean_squared_error', patience=20)
 
 # TODO: REVISE THIS UGLY QUICK FIX
 train_labels = train_labels[:len(train_labels) - 10]
-history = model.fit(normed_train_data, train_labels, epochs=5000,
+history = model.fit(normed_train_data, train_labels, epochs=5,
                     validation_split=0.2, verbose=1, callbacks=[early_stop])
 
 test_df = read_cleanse(train=False, dfevoo=dfevoo)
@@ -134,10 +134,10 @@ unknown_labels = test_df.pop(target)
 
 normed_unknown_data = []
 for i in range(lb, len(train_dataset)):
-    normed_unknown_data.append(scaled_data[i - lb:i].values)
+    normed_unknown_data.append(scaled_data[i - lb:i]['year'])
 
 normed_unknown_data = np.array(normed_unknown_data)
-normed_unknown_data = np.reshape(normed_unknown_data, (normed_unknown_data.shape[0], normed_unknown_data.shape[1], 3))
+normed_unknown_data = np.reshape(normed_unknown_data, (normed_unknown_data.shape[0], normed_unknown_data.shape[1], 1))
 unknown_predictions = model.predict(normed_unknown_data)
 print(unknown_predictions)
 print(unknown_labels)
