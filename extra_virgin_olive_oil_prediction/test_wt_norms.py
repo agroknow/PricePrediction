@@ -75,43 +75,20 @@ train_stats = train_stats.transpose()
 train_labels = train_dataset.pop(target)
 test_labels = test_dataset.pop(target)
 
-# print(train_labels)
+dataset.pop(target)
+overall_stats = dataset.describe().transpose()
+def norm(x, stats):
+    return (x - stats['mean']) / stats['std']
 
-scaler = MinMaxScaler(feature_range=(0, 1))
-dataset.pop('price')
-scaler.fit(dataset)
-scaled_data = scaler.transform(train_dataset)
+scaled_data = norm(train_dataset, overall_stats)
 
-# print(train_dataset)
-# print(scaled_data)
-# print(scaled_data[0:10, 0])
-print(scaled_data[0:10])
-quit(0)
-# scaled_data_train=scaler.fit_transform(train_dataset)
-
-# Convert Training Data to Right Shape
 lb = 10
 normed_train_data = []
-normed_test_data = []
-# # execute a loop that starts from 61st record and stores all the previous 60 records to the x_train list. The 61st record is stored in the y_trainlabels list.
 for i in range(lb, len(train_dataset)):
-    normed_train_data.append(scaled_data[i - lb:i])
-#
+    normed_train_data.append(scaled_data[i - lb:i].values)
+
 normed_train_data = np.array(normed_train_data)
-
-print(normed_train_data.shape)
 normed_train_data = np.reshape(normed_train_data, (normed_train_data.shape[0], normed_train_data.shape[1], 3))
-
-# quit(0)
-print(normed_train_data)
-
-
-# overall_stats = dataset.describe().transpose()
-# def norm(x, stats):
-#     return (x - stats['mean']) / stats['std']
-#
-# normed_train_data = norm(train_dataset, overall_stats)
-# normed_train_data = np.reshape(normed_train_data, (normed_train_data.shape[0], normed_train_data.shape[1], 3))
 
 
 def build_model():
@@ -141,11 +118,11 @@ model = build_model()
 
 model.summary()
 # print(normed_train_data)
-early_stop = EarlyStopping(monitor='val_loss', patience=20)
+early_stop = EarlyStopping(monitor='mean_squared_error', patience=20)
 
 # TODO: REVISE THIS UGLY QUICK FIX
 train_labels = train_labels[:len(train_labels) - 10]
-history = model.fit(normed_train_data, train_labels, epochs=500,
+history = model.fit(normed_train_data, train_labels, epochs=5000,
                     validation_split=0.2, verbose=1, callbacks=[early_stop])
 
 test_df = read_cleanse(train=False, dfevoo=dfevoo)
@@ -153,42 +130,26 @@ test_df.pop('date')
 
 unknown_labels = test_df.pop(target)
 
-inputs = test_df
-# print(inputs)
-# print(len(inputs))
-# print(inputs.shape[0])
-print(test_df.head())
-print(train_dataset.head())
-# inputs = inputs.reshape(-1,1)
-# quit(0)
+# scaled_data = norm(test_df, overall_stats)
 
-inputs = scaler.transform(inputs)
-print(len(inputs))
+normed_unknown_data = []
+for i in range(lb, len(train_dataset)):
+    normed_unknown_data.append(scaled_data[i - lb:i].values)
 
-X_test = []
-
-# for i in range(lb,len(inputs)):
-for i in range(lb, inputs.shape[0]):
-    X_test.append(inputs[i - lb:i])
-# X_test = inputs
-# X_test.append(inputs[:,0])
-X_test = np.array(X_test)
-print(len(X_test))
-X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 3))
-
-unknown_predictions = model.predict(X_test)
+normed_unknown_data = np.array(normed_unknown_data)
+normed_unknown_data = np.reshape(normed_unknown_data, (normed_unknown_data.shape[0], normed_unknown_data.shape[1], 3))
+unknown_predictions = model.predict(normed_unknown_data)
 print(unknown_predictions)
-
-# unknown_predictions = scaler.inverse_transform(unknown_predictions)
-print(len(unknown_predictions))
-print(len(inputs))
-print(inputs)
-
-# unknown_predictions = unknown_predictions - 40
-
+print(unknown_labels)
 
 plt.plot(unknown_predictions)
 plt.plot(unknown_labels)
+plt.title('price prediction')
+plt.legend(['Predictions', 'Actual'], loc='upper left')
+plt.show()
+
+plt.plot(unknown_predictions)
+plt.plot(train_labels)
 plt.title('price prediction')
 plt.legend(['Predictions', 'Actual'], loc='upper left')
 plt.show()
