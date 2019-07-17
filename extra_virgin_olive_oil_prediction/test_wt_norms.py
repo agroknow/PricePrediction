@@ -81,19 +81,19 @@ def norm(x, stats):
     return (x - stats['mean']) / stats['std']
 
 scaled_data = norm(train_dataset, overall_stats)
-
+print(scaled_data)
 lb = 10
 normed_train_data = []
 for i in range(lb, len(train_dataset)):
-    normed_train_data.append(scaled_data[i - lb:i].values)
+    normed_train_data.append(scaled_data[i - lb:i]['year'])
 
 normed_train_data = np.array(normed_train_data)
-normed_train_data = np.reshape(normed_train_data, (normed_train_data.shape[0], normed_train_data.shape[1], 3))
+normed_train_data = np.reshape(normed_train_data, (normed_train_data.shape[0], normed_train_data.shape[1], 1))
 
 
 def build_model():
     t_model = Sequential()
-    t_model.add(LSTM(units=256, return_sequences=True, input_shape=(normed_train_data.shape[1], 3)))
+    t_model.add(LSTM(units=256, return_sequences=True, input_shape=(normed_train_data.shape[1], 1)))
 
     # Dropout layer is added to avoid over-fitting, which is a phenomenon where a machine learning model performs better on the training data compared to the test data
     t_model.add(Dropout(0.2))
