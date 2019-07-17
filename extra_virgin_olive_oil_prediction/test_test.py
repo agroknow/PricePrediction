@@ -14,38 +14,47 @@ import seaborn as sns
 from keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
 from sklearn.metrics import accuracy_score
 
-
 # https://stackoverflow.com/questions/42532386/how-to-work-with-multiple-inputs-for-lstm-in-keras
 # interesting: https://datascience.stackexchange.com/questions/17024/rnns-with-multiple-features
 
 
 test_date = '2019-01-01'
+train_split = 0.9
+dfevoo = None
+columns = ['year', 'month', 'day', 'date', 'price']
 
 
-def read_cleanse():
-    df = pd.read_csv("food_dataset.csv")
+def read_cleanse(train=True, dfevoo=None):
+    if train:
+        df = pd.read_csv("food_dataset.csv")
 
-    dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
-    dfevoo = dfevoo[dfevoo['country'] == 'greece']
-    dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-    dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
-        by='priceStringDate')
-    dfevoo = pd.DataFrame(dfevoo)
-    dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
-    dfevoo['date'] = pd.to_datetime(dfevoo['priceStringDate'])
-    dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
-    dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
-    dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
+        dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
+        dfevoo = dfevoo[dfevoo['country'] == 'greece']
+        dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
+        dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
+            by='priceStringDate')
+        dfevoo = pd.DataFrame(dfevoo)
+        dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
+        dfevoo['date'] = pd.to_datetime(dfevoo['priceStringDate'])
+        dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
+        dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
+        dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
 
-    dfevoo = dfevoo[dfevoo['date'] < test_date]
+        # dfevoo = dfevoo.sample(frac=1)
 
-    columns = ['year', 'month', 'day', 'price']
-    dataset = dfevoo[columns]
-    return dataset
+        dataset = dfevoo[columns]
+        # dataset = dataset[:int(len(dataset) * train_split)]
+        dataset = dataset[dataset['date'] < test_date]
+        return dataset, dfevoo
+    else:
+        dataset = dfevoo[columns]
+        # dataset = dataset[int(len(dataset) * train_split):]
+        dataset = dataset[dataset['date'] >= test_date]
+        return dataset
 
 
-dataset = read_cleanse()
-
+dataset, dfevoo = read_cleanse()
+dataset.pop('date')
 dataset = dataset.dropna()
 target = 'price'
 
@@ -56,7 +65,7 @@ test_dataset = dataset.drop(train_dataset.index)
 
 train_stats = train_dataset.describe()
 
-#print(train_stats)
+# print(train_stats)
 
 train_stats.pop(target)
 train_stats = train_stats.transpose()
@@ -69,7 +78,7 @@ test_labels = test_dataset.pop(target)
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled_data = scaler.fit_transform(train_dataset)
 
-#scaled_data_train=scaler.fit_transform(train_dataset)
+# scaled_data_train=scaler.fit_transform(train_dataset)
 
 
 # scaled_data_train =[]
@@ -80,13 +89,13 @@ scaled_data = scaler.fit_transform(train_dataset)
 # #
 #     scaled_data_test = scaled_data[i,0]
 
-#Convert Training Data to Right Shape
-lb = 1
+# Convert Training Data to Right Shape
+lb = 10
 normed_train_data = []
 normed_test_data = []
 # # execute a loop that starts from 61st record and stores all the previous 60 records to the x_train list. The 61st record is stored in the y_trainlabels list.
 for i in range(lb, len(train_dataset)):
-    normed_train_data.append(scaled_data[i-lb:i, 0])
+    normed_train_data.append(scaled_data[i - lb:i, 0])
     normed_test_data.append(scaled_data[i, 0])
 #
 normed_train_data = np.array(normed_train_data)
@@ -106,12 +115,12 @@ print(normed_train_data)
 
 def build_model():
     t_model = Sequential()
-    t_model.add(LSTM(units=50, return_sequences=True, input_shape=(normed_train_data.shape[1],1)))
+    t_model.add(LSTM(units=50, return_sequences=True, input_shape=(normed_train_data.shape[1], 1)))
 
     # Dropout layer is added to avoid over-fitting, which is a phenomenon where a machine learning model performs better on the training data compared to the test data
     t_model.add(Dropout(0.2))
 
-    #add three more LSTM and dropout layers to our model
+    # add three more LSTM and dropout layers to our model
     t_model.add(LSTM(units=100, return_sequences=True))
     t_model.add(Dropout(0.2))
 
@@ -131,37 +140,38 @@ def build_model():
 
 model = build_model()
 
-
 model.summary()
 
 early_stop = EarlyStopping(monitor='val_loss', patience=20)
 
-
-
-history = model.fit(normed_train_data, train_labels, epochs=500,
+# TODO: REVISE THIS UGLY QUICK FIX
+train_labels = train_labels[:len(train_labels) - 10]
+history = model.fit(normed_train_data, train_labels, epochs=10,
                     validation_split=0.2, verbose=1, callbacks=[early_stop])
 
+test_df = read_cleanse(train=False, dfevoo=dfevoo)
+test_df.pop('date')
 
-test_df = pd.read_csv("food_dataset.csv")
-
-dfevoo = test_df[test_df['product'] == 'extra virgin olive oil (up to 0,8°)']
-dfevoo = dfevoo[dfevoo['country'] == 'greece']
-dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
-    by='priceStringDate')
-dfevoo = pd.DataFrame(dfevoo)
-dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
-dfevoo['date'] = pd.to_datetime(dfevoo['priceStringDate'])
-dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
-dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
-dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
-columns = ['year', 'month', 'day', 'price']
-dfall=dfevoo[columns]
-test_date = '2018-01-01'
-dfevoo = dfevoo[dfevoo['date'] >= test_date]
-
-columns = ['year', 'month', 'day', 'price']
-test_df = dfevoo[columns]
+# test_df = pd.read_csv("food_dataset.csv")
+#
+# dfevoo = test_df[test_df['product'] == 'extra virgin olive oil (up to 0,8°)']
+# dfevoo = dfevoo[dfevoo['country'] == 'greece']
+# dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
+# dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
+#     by='priceStringDate')
+# dfevoo = pd.DataFrame(dfevoo)
+# dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
+# dfevoo['date'] = pd.to_datetime(dfevoo['priceStringDate'])
+# dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
+# dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
+# dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
+# columns = ['year', 'month', 'day', 'price']
+# dfall=dfevoo[columns]
+# test_date = '2018-01-01'
+# dfevoo = dfevoo[dfevoo['date'] >= test_date]
+#
+# columns = ['year', 'month', 'day', 'price']
+# test_df = dfevoo[columns]
 
 
 unknown_labels = test_df.pop(target)
@@ -174,8 +184,8 @@ unknown_labels = test_df.pop(target)
 # unknown_stats.pop(target)
 # unknown_stats = unknown_stats.transpose()
 # inputs = scaler.fit_transform(test_df)
-inputs=dfall[len(dfall)-len(test_df)-lb:].values
-inputs=test_df
+# inputs=dfall[len(dfall)-len(test_df)-lb:].values
+inputs = test_df
 print(inputs)
 print(len(inputs))
 print(inputs.shape[0])
@@ -184,35 +194,30 @@ print(train_dataset.head())
 # inputs = inputs.reshape(-1,1)
 
 
-#print(inputs)
+# print(inputs)
 
 
-inputs  = scaler.transform(inputs)
+inputs = scaler.transform(inputs)
 print(len(inputs))
-
 
 X_test = []
 
-
-
 # for i in range(lb,len(inputs)):
-for i in range(lb,inputs.shape[0]):
-    X_test.append(inputs[i-lb:i,0])
+for i in range(lb, inputs.shape[0]):
+    X_test.append(inputs[i - lb:i, 0])
 # X_test = inputs
 # X_test.append(inputs[:,0])
 X_test = np.array(X_test)
 print(len(X_test))
-X_test = np.reshape(X_test, (X_test.shape[0],X_test.shape[1],1))
+X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 
 unknown_predictions = model.predict(X_test)
 print(unknown_predictions)
-
 
 # unknown_predictions = scaler.inverse_transform(unknown_predictions)
 print(len(unknown_predictions))
 print(len(inputs))
 print(inputs)
-
 
 # unknown_predictions = unknown_predictions - 40
 
