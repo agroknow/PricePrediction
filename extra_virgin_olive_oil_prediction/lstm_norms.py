@@ -20,7 +20,7 @@ from sklearn.metrics import accuracy_score
 
 test_date = '2019-01-01'
 train_split = 0.9
-dfevoo = None
+# dfevoo = None
 columns = ['year', 'month', 'day', 'date', 'price']
 
 
@@ -33,7 +33,7 @@ def read_cleanse(train=True, dfevoo=None):
         dfevoo = dfevoo[dfevoo['country'] == 'greece']
         psd = pd.to_datetime(dfevoo['priceStringDate'])
         dfevoo['priceStringDate'] = psd
-        dfevoo = dfevoo.sort_values(by='priceStringDate')
+        # dfevoo = dfevoo.sort_values(by='priceStringDate')
         dfevoo = pd.DataFrame(dfevoo)
         # dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
         dfevoo['date'] = pd.to_datetime(dfevoo['priceStringDate'])
@@ -46,8 +46,9 @@ def read_cleanse(train=True, dfevoo=None):
         # dfevoo = dfevoo.sample(frac=1)
 
         dataset = dfevoo[columns]
-        # dataset = dataset[:int(len(dataset) * train_split)]
-        dataset = dataset[dataset['date'] < test_date]
+        # dataset = dataset[dataset['date'] >= '2018-01-01']
+        # dataset = dataset[dataset['date'] <= '2018-03-16']
+        # dataset = dataset[dataset['date'] < test_date]
         return dataset, dfevoo
     else:
         dataset = dfevoo[columns]
@@ -57,40 +58,44 @@ def read_cleanse(train=True, dfevoo=None):
 
 
 dataset, dfevoo = read_cleanse()
-dataset.pop('date')
 dataset = dataset.dropna()
 target = 'price'
 
 train_perc = 1.0
 
 train_dataset = dataset[:int(len(dataset) * train_perc)]  # .sample(frac=0.8, random_state=0)
+train_dataset = train_dataset[train_dataset['date'] < test_date]
+
+
+# dataset.pop('date')
+# train_dataset.pop('date')
 # test_dataset = dataset.drop(train_dataset.index)
 
 
 def dense_model():
-    train_stats = dataset.describe()
+    scaler = MinMaxScaler(feature_range=(0, 1))
 
-    print(train_stats)
+    dataset.pop('date')
 
-    train_stats.pop(target)
-    train_stats = train_stats.transpose()
+    train_dataset = dataset[dataset['year'] < 2019]
+    test_dataset = dataset[dataset['year'] >= 2019]
+
+    dataset.pop(target)
 
     train_labels = train_dataset.pop(target)
-    # test_labels = test_dataset.pop(target)
+    test_labels = test_dataset.pop(target)
 
+    scaler.fit(dataset)
 
-    def norm(x, stats):
-        return (x - stats['mean']) / stats['std']
+    train_dataset = scaler.transform(train_dataset)
+    test_dataset = scaler.transform(test_dataset)
 
-
-    normed_train_data = norm(train_dataset, train_stats)
     # normed_test_data = norm(test_dataset, train_stats)
-
 
     # normed_train_data=np.reshape(normed_train_data, (normed_train_data.shape[0], normed_train_data.shape[1], 1))
     def build_model():
         t_model = Sequential()
-        t_model.add(Dense(512, activation="relu", input_shape=[len(train_dataset.keys())]))
+        t_model.add(Dense(512, activation="relu", input_shape=[3]))
         t_model.add(Dropout(0.1))
         t_model.add(Dense(256, activation="relu"))
         t_model.add(Dropout(0.1))
@@ -105,35 +110,28 @@ def dense_model():
                         metrics=['mean_absolute_error', 'mean_squared_error'])
         return t_model
 
-
     model = build_model()
 
     model.summary()
 
     early_stop = EarlyStopping(monitor='val_loss', patience=20)
 
-    history = model.fit(normed_train_data, train_labels, epochs=500,
-                        validation_split=0.4, verbose=1, callbacks=[early_stop])
-    test_df = read_cleanse(train=False, dfevoo=dfevoo)
-    test_df.pop('date')
+    model.fit(train_dataset, train_labels, epochs=500,
+              validation_split=0.4, verbose=1, callbacks=[early_stop])
 
-    unknown_labels = test_df.pop(target)
-
-    normed_unknown_data = norm(test_df, train_stats)
-    unknown_predictions = model.predict(normed_unknown_data).flatten()
+    unknown_predictions = model.predict(test_dataset).flatten()
 
     print(unknown_predictions)
-    print(unknown_labels)
+    print(test_labels)
 
     # unknown_predictions = unknown_predictions - 40
     print(unknown_predictions)
 
     plt.plot(unknown_predictions)
-    plt.plot(unknown_labels.values)
+    plt.plot(test_labels.values)
     plt.title('price prediction')
     plt.legend(['Predictions', 'Actual'], loc='upper left')
     plt.show()
-
 
 
 dense_model()

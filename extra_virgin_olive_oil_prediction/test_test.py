@@ -85,8 +85,8 @@ scaled_data = scaler.transform(train_dataset)
 # print(train_dataset)
 # print(scaled_data)
 # print(scaled_data[0:10, 0])
-print(scaled_data[0:10])
-quit(0)
+# print(scaled_data[0:10])
+# quit(0)
 # scaled_data_train=scaler.fit_transform(train_dataset)
 
 # Convert Training Data to Right Shape
