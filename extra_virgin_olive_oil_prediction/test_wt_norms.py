@@ -29,8 +29,9 @@ def read_cleanse(train=True, dfevoo=None):
         df = pd.read_csv("food_dataset.csv")
 
         dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
-        # dfevoo = dfevoo[dfevoo['country'] == 'greece']
-        dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
+        dfevoo = dfevoo[dfevoo['country'] == 'greece']
+        psd = pd.to_datetime(dfevoo['priceStringDate'])
+        dfevoo['priceStringDate'] = psd
         dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
             by='priceStringDate')
         dfevoo = pd.DataFrame(dfevoo)
@@ -152,7 +153,7 @@ unknown_labels = test_df.pop(target)
 # unknown_predictions = model.predict(normed_unknown_data)
 
 
-unknown_predictions = model.predict(normed_train_data)
+unknown_predictions = model.predict(normed_train_data).flatten()
 print(unknown_predictions)
 print(unknown_labels)
 
