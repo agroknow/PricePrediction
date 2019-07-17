@@ -33,18 +33,28 @@ def read_cleanse():
     dfevoo = pd.DataFrame(dfevoo)
     dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
     dfevoo['date'] = pd.to_datetime(dfevoo['priceStringDate'])
-    dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
-    dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
-    dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
+    # dfevoo['year'] = pd.DatetimeIndex(dfevoo['date']).year
+    # dfevoo['month'] = pd.DatetimeIndex(dfevoo['date']).month
+    # dfevoo['day'] = pd.DatetimeIndex(dfevoo['date']).day
 
-    dfevoo = dfevoo[dfevoo['date'] < test_date]
+    # dfevoo = dfevoo[dfevoo['date'] < test_date]
+    #
+    # # columns = ['year', 'month', 'day', 'price']
+    # columns = ['date']
+    # dataset = dfevoo[columns]
+    return dfevoo
 
-    columns = ['year', 'month', 'day', 'price']
-    dataset = dfevoo[columns]
-    return dataset
 
+dfevoo = read_cleanse()
+print(dfevoo)
+columns = ['date']
+dataset = dfevoo[columns]
+dataset= dfevoo[dfevoo['date'] < test_date]
 
-dataset = read_cleanse()
+print(dataset)
+
+print(dataset)
+quit(0)
 
 dataset = dataset.dropna()
 target = 'price'
@@ -53,21 +63,20 @@ train_perc = 1.0
 
 train_dataset = dataset[:int(len(dataset) * train_perc)]  # .sample(frac=0.8, random_state=0)
 test_dataset = dataset.drop(train_dataset.index)
-
+print(train_dataset)
 train_stats = train_dataset.describe()
-
+quit(0)
 #print(train_stats)
 
 train_stats.pop(target)
 train_stats = train_stats.transpose()
-
 train_labels = train_dataset.pop(target)
 test_labels = test_dataset.pop(target)
 
 # print(train_labels)
 
 scaler = MinMaxScaler(feature_range=(0, 1))
-scaled_data = scaler.fit_transform(train_dataset)
+scaled_data = scaler.fit_transform(dataset)
 
 #scaled_data_train=scaler.fit_transform(train_dataset)
 
@@ -85,15 +94,18 @@ lb = 1
 normed_train_data = []
 normed_test_data = []
 # # execute a loop that starts from 61st record and stores all the previous 60 records to the x_train list. The 61st record is stored in the y_trainlabels list.
-for i in range(lb, len(train_dataset)):
-    normed_train_data.append(scaled_data[i-lb:i, 0])
+for i in range(lb, len(dataset)):
+    normed_train_data.append(scaled_data[i-lb:i])
     normed_test_data.append(scaled_data[i, 0])
 #
 normed_train_data = np.array(normed_train_data)
 normed_test_data = np.array(normed_test_data)
-
+print('normed_train_data')
 print(normed_train_data)
 
+print('normed_test_data')
+print(normed_test_data)
+quit(0)
 # scaled_data_train=np.array(scaled_data_train)
 # scaled_data_test=np.array(scaled_data_test)
 
@@ -138,7 +150,7 @@ early_stop = EarlyStopping(monitor='val_loss', patience=20)
 
 
 
-history = model.fit(normed_train_data, train_labels, epochs=500,
+history = model.fit(normed_train_data, normed_test_data, epochs=500,
                     validation_split=0.2, verbose=1, callbacks=[early_stop])
 
 

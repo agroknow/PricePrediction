@@ -47,8 +47,14 @@ y_train = []
 for i in range(60, len(training_set_scaled)):
     X_train.append(training_set_scaled[i-60:i, 0])
     y_train.append(training_set_scaled[i, 0])
-X_train, y_train = np.array(X_train), np.array(y_train)
+X_train=np.array(X_train)
+y_train = np.array(y_train)
+print(X_train)
+print('x_train')
 
+print(y_train)
+print('y_train')
+quit(0)
 # Reshaping
 X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
 print(y_train)
