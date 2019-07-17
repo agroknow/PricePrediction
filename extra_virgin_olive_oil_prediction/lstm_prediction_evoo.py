@@ -73,8 +73,24 @@ normed_train_data = norm(train_dataset, train_stats)
 normed_test_data = norm(test_dataset, train_stats)
 
 
+
+#normed_train_data=np.reshape(normed_train_data, (normed_train_data.shape[0], normed_train_data.shape[1], 1))
 def build_model():
     t_model = Sequential()
+    # t_model.add(LSTM(units=50, return_sequences=True, input_shape=(normed_train_data.shape[1],1)))
+    #
+    # # Dropout layer is added to avoid over-fitting, which is a phenomenon where a machine learning model performs better on the training data compared to the test data
+    # t_model.add(Dropout(0.2))
+    #
+    # #add three more LSTM and dropout layers to our model
+    # t_model.add(LSTM(units=100, return_sequences=True))
+    # t_model.add(Dropout(0.2))
+    #
+    # t_model.add(LSTM(units=100, return_sequences=True))
+    # t_model.add(Dropout(0.2))
+    #
+    # t_model.add(LSTM(units=100))
+    #t_model.add(Dropout(0.2))
     t_model.add(Dense(64, activation="relu", input_shape=[len(train_dataset.keys())]))
     t_model.add(Dense(64, activation="relu"))
     t_model.add(Dense(1))
@@ -92,6 +108,7 @@ early_stop = EarlyStopping(monitor='val_loss', patience=20)
 
 history = model.fit(normed_train_data, train_labels, epochs=500,
                     validation_split=0.2, verbose=0, callbacks=[early_stop])
+
 
 test_df = pd.read_csv("food_dataset.csv")
 

@@ -40,6 +40,7 @@ training_set=pd.DataFrame(training_set)
 from sklearn.preprocessing import MinMaxScaler
 sc = MinMaxScaler(feature_range = (0, 1))
 training_set_scaled = sc.fit_transform(training_set)
+
 # Creating a data structure with 60 timesteps and 1 output
 X_train = []
 y_train = []
@@ -50,7 +51,8 @@ X_train, y_train = np.array(X_train), np.array(y_train)
 
 # Reshaping
 X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-
+print(y_train)
+quit(0)
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
