@@ -17,6 +17,7 @@ from sklearn.metrics import accuracy_score
 # https://stackoverflow.com/questions/42532386/how-to-work-with-multiple-inputs-for-lstm-in-keras
 # interesting: https://datascience.stackexchange.com/questions/17024/rnns-with-multiple-features
 
+# idea_v1.0: https://www.datacamp.com/community/tutorials/lstm-python-stock-market
 
 test_date = '2019-01-01'
 train_split = 0.9
@@ -85,8 +86,8 @@ scaled_data = scaler.transform(train_dataset)
 # print(train_dataset)
 # print(scaled_data)
 # print(scaled_data[0:10, 0])
-print(scaled_data[0:10])
-quit(0)
+# print(scaled_data[0:10])
+# quit(0)
 # scaled_data_train=scaler.fit_transform(train_dataset)
 
 # Convert Training Data to Right Shape
