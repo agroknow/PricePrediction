@@ -55,12 +55,12 @@ nunOKAA = dfFAO['country'].nunique()
 #print(nunOKAA)
 
 # #Visualization
-imageDir = "plots/"
-df_milk = dfFAO[dfFAO['product'] == 'milk and milk products']
-ax = plt.gca()
-df_milk.plot(kind='line',x='priceStringDate',y='price',ax=ax)
-plt.savefig(imageDir + 'milk.png', bbox_inches='tight')
-#plt.show()
+# imageDir = "plots/"
+# df_milk = dfFAO[dfFAO['product'] == 'milk and milk products']
+# ax = plt.gca()
+# df_milk.plot(kind='line',x='priceStringDate',y='price',ax=ax)
+# plt.savefig(imageDir + 'milk.png', bbox_inches='tight')
+# #plt.show()
 # #Visualization
 #
 # # hist
@@ -154,7 +154,7 @@ for i in range(0, 13846):
 # calculate rmse
 rms = np.sqrt(np.mean(np.power((np.array(valid['price']) - preds), 2)))
 print(rms)
-
+quit(0)
 #MA with ARMA class
 #code
 
