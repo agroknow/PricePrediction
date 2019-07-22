@@ -46,7 +46,7 @@ train_data = dataset[0:int(len(dataset) * train_perc),:]  # .sample(frac=0.8, ra
 test_data = dataset[int(len(dataset) * train_perc):]
 print(train_data)
 print(test_data)
-# quit(0)
+
 # train_data =np.array(train_data)
 # test_data =np.array(test_data)
 

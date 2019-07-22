@@ -42,17 +42,17 @@ test_data = dfevoo.drop(train_data.index)
 train_data =np.array(train_data)
 test_data =np.array(test_data)
 # Normalizing the Data
-print(train_data)
-print(dfevoo.shape[0])
-print('train')
-print(len(train_data))
-print(train_data.shape[0])
-print('test')
-
-print(len(test_data))
-
-print(test_data.shape[0])
-print(len(train_data)//4)
+# print(train_data)
+# print(dfevoo.shape[0])
+# print('train')
+# print(len(train_data))
+# print(train_data.shape[0])
+# print('test')
+#
+# print(len(test_data))
+#
+# print(test_data.shape[0])
+# print(len(train_data)//4)
 scaler = MinMaxScaler(feature_range = (0, 1))
 train_data = train_data.reshape(-1,1)
 test_data = test_data.reshape(-1,1)
@@ -114,7 +114,6 @@ plt.ylabel('Mid Price')
 plt.legend(['Predictions', 'Actual'], loc='upper left')
 plt.show()
 # Exponential Moving Average
-
 window_size = 100
 N = train_data.size
 
