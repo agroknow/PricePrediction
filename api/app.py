@@ -63,95 +63,97 @@ def api_training():
     Data.index = Data.priceStringDate
     Data.drop('priceStringDate', axis=1, inplace=True)
 
-    # creating train and test sets
-    dataset = Data.values
     lb = 80
 
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaler.fit(dataset)
+    for lb in range(1, 160, 5):
 
-    test = dataset[len(dataset) - lb:, :]
-    dataset = dataset[:len(dataset) - lb, :]
-    train = dataset[:len(dataset) - lb, :]
-    # valid = dataset[int(0.2 * (len(dataset))):, :]
-    scaled_data = scaler.transform(train)
-    # Convert Training Data to Right Shape
-    x_train = []
-    y_train = []
-    for i in range(lb, len(train)):
-        x_train.append(scaled_data[i - lb:i, 0])
-        y_train.append(scaled_data[i, 0])
+        # creating train and test sets
+        dataset = Data.values
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaler.fit(dataset)
 
-    x_train = np.array(x_train)
-    y_train = np.array(y_train)
+        test = dataset[len(dataset) - lb:, :]
+        dataset = dataset[:len(dataset) - lb, :]
+        train = dataset[:len(dataset) - lb, :]
+        # valid = dataset[int(0.2 * (len(dataset))):, :]
+        scaled_data = scaler.transform(train)
+        # Convert Training Data to Right Shape
+        x_train = []
+        y_train = []
+        for i in range(lb, len(train)):
+            x_train.append(scaled_data[i - lb:i, 0])
+            y_train.append(scaled_data[i, 0])
 
-    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+        x_train = np.array(x_train)
+        y_train = np.array(y_train)
 
-    model = LSTMModel(x_train=x_train)
+        x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
 
-    keras_callbacks = [
-        EarlyStopping(monitor='loss', patience=20, verbose=0)
-    ]
-    config = {}
-    config['epochs'] = 1000
-    config['batch_size'] = 32
-    config['verbose'] = 1
-    config['callbacks'] = keras_callbacks
+        model = LSTMModel(x_train=x_train)
 
-    model.fit(features=x_train, labels=y_train, config=config)
+        keras_callbacks = [
+            EarlyStopping(monitor='loss', patience=20, verbose=0)
+        ]
+        config = {}
+        config['epochs'] = 1000
+        config['batch_size'] = 32
+        config['verbose'] = 1
+        config['callbacks'] = keras_callbacks
 
-    predictions = []
-    for preds in range(0, lb + 1):
+        model.fit(features=x_train, labels=y_train, config=config)
 
-        valid = dataset[len(dataset) - lb:]
-        inputs = valid
+        predictions = []
+        for preds in range(0, lb + 1):
 
-        # Scale our test data
-        inputs = inputs.reshape(-1, 1)
-        inputs = scaler.transform(inputs)
+            valid = dataset[len(dataset) - lb:]
+            inputs = valid
 
-        # final test input
-        X_test = []
-        for i in range(lb, inputs.shape[0] + 1):
-            X_test.append(inputs[i - lb:i, 0])
-        X_test = np.array(X_test)
-        X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+            # Scale our test data
+            inputs = inputs.reshape(-1, 1)
+            inputs = scaler.transform(inputs)
 
-        closing_price = scaler.inverse_transform(model.predict(data=X_test))
+            # final test input
+            X_test = []
+            for i in range(lb, inputs.shape[0] + 1):
+                X_test.append(inputs[i - lb:i, 0])
+            X_test = np.array(X_test)
+            X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 
-        predictions.append(closing_price.flatten()[0])
+            closing_price = scaler.inverse_transform(model.predict(data=X_test))
 
-        dataset = np.append(dataset, np.array([closing_price.flatten()[0]]))
+            predictions.append(closing_price.flatten()[0])
 
-    plt.plot(predictions, color='green', label='Predicted')
-    plt.plot(test, color='blue', label='Actual')
-    plt.title('Price Prediction  ')
-    plt.xlabel('date')
-    plt.ylabel('price')
-    plt.legend()
-    plt.savefig('plots/pred_1_%s.png' % str(lb), bbox_inches='tight')
-    plt.show()
+            dataset = np.append(dataset, np.array([closing_price.flatten()[0]]))
 
-    complete_pred = []
-    for val in train:
-        complete_pred.append(val)
-    for pred in predictions:
-        complete_pred.append(pred)
+        plt.plot(predictions, color='green', label='Predicted')
+        plt.plot(test, color='blue', label='Actual')
+        plt.title('Price Prediction  ')
+        plt.xlabel('date')
+        plt.ylabel('price')
+        plt.legend()
+        plt.savefig('plots/pred_1_%s.png' % str(lb), bbox_inches='tight')
+        plt.show()
 
-    actual = []
-    for val in train:
-        actual.append(val)
-    for val in test:
-        actual.append(val)
+        complete_pred = []
+        for val in train:
+            complete_pred.append(val)
+        for pred in predictions:
+            complete_pred.append(pred)
 
-    plt.plot(complete_pred, color='green', label='Predicted')
-    plt.plot(actual, color='blue', label='Actual')
-    plt.title('Price Prediction  ')
-    plt.xlabel('date')
-    plt.ylabel('price')
-    plt.legend()
-    plt.savefig('plots/pred_2_%s.png' % str(lb), bbox_inches='tight')
-    plt.show()
+        actual = []
+        for val in train:
+            actual.append(val)
+        for val in test:
+            actual.append(val)
+
+        plt.plot(complete_pred, color='green', label='Predicted')
+        plt.plot(actual, color='blue', label='Actual')
+        plt.title('Price Prediction  ')
+        plt.xlabel('date')
+        plt.ylabel('price')
+        plt.legend()
+        plt.savefig('plots/pred_2_%s.png' % str(lb), bbox_inches='tight')
+        plt.show()
 
     dictionary = {'predictions': predictions}
     return json.dumps(str(dictionary))
