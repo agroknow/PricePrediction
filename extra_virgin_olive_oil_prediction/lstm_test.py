@@ -122,6 +122,7 @@ valid['Predictions'] = closing_price
 plt.plot(train['price'])
 plt.plot(valid[['price','Predictions']])
 plt.show()
+plt.savefig('%s.png' % flag, bbox_inches='tight')
 quit(0)
 
 

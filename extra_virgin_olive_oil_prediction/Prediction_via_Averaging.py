@@ -29,8 +29,8 @@ plt.figure(figsize = (18,9))
 plt.plot(dfevoo['price'])
 plt.xlabel('priceStringDate',fontsize=18)
 plt.ylabel('price',fontsize=18)
-# plt.show()
-
+plt.show()
+quit(0)
 dfevoo = dfevoo.drop(columns=['priceStringDate'])
 # Splitting Data into a Training set and a Test set
 train_perc = 0.7
