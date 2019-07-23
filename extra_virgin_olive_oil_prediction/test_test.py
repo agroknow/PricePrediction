@@ -161,7 +161,7 @@ inputs = test_df
 print(test_df.head())
 print(train_dataset.head())
 # inputs = inputs.reshape(-1,1)
-# quit(0)
+quit(0)
 
 inputs = scaler.transform(inputs)
 print(len(inputs))

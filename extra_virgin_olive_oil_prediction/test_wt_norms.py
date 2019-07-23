@@ -86,6 +86,7 @@ scaled_data = train_dataset
 print(scaled_data)
 lb = 10
 normed_train_data = []
+scaled_data = train_dataset
 for i in range(lb, len(train_dataset)):
     normed_train_data.append(scaled_data[i - lb:i].values)
 
