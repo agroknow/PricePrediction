@@ -16,21 +16,21 @@ from keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
 # Downloading the Data
 df = pd.read_csv("food_dataset.csv")
 
-dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
+dfevoo = df[df['product'] == 'μπανάνες']
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
 dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
     by='priceStringDate')
 dfevoo = pd.DataFrame(dfevoo)
 dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
-
+print(dfevoo['price'])
 
 #Data Visualization
 plt.figure(figsize = (18,9))
 plt.plot(dfevoo['price'])
 plt.xlabel('priceStringDate',fontsize=18)
 plt.ylabel('price',fontsize=18)
-# plt.show()
+plt.show()
 
 # dfevoo = dfevoo.drop(columns=['priceStringDate'])
 # Splitting Data into a Training set and a Test set
@@ -39,7 +39,7 @@ dfevoo.drop('priceStringDate', axis=1, inplace=True)
 
 dataset=dfevoo.values
 train_perc = 0.7
-
+quit(0)
 # Splitting Data into a Training set and a Test set
 
 train_data = dataset[0:int(len(dataset) * train_perc),:]  # .sample(frac=0.8, random_state=0)

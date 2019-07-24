@@ -14,11 +14,15 @@ parsed = json.loads(data)
 df = pd.DataFrame(parsed)
 prouped_ordered = df.groupby(['product']).size().reset_index(name='counts').sort_values('counts')
 print(prouped_ordered)
-dfevoo = df[df['product'] == 'χοιρινα εξωτερικού τ. καρρέ μισάδια']
+# dfevoo = df[df['product'] == 'γιδοπρόβατα']
+dfevoo = df[df['product'].str.contains("olive")]
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
+print(dfevoo['product'].head(1000))
+
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
 dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
     by='priceStringDate')
+
 dfevoo = pd.DataFrame(dfevoo)
 dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
 data=dfevoo['price']

@@ -10,7 +10,7 @@ from pmdarima.arima import auto_arima
 
 df = pd.read_csv("food_dataset.csv")
 
-dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
+dfevoo = df[df['product'] == 'μπανάνες']
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
 dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
@@ -25,13 +25,11 @@ test = dfevoo.drop(train.index)
 
 training = train['price']
 testing = test['price']
-N = 5
 
-j = 1
-i = 1
+
 k = 1
-for i in range(N):
-    for j in range(N):
+for i in range(1,5,1):
+    for j in range(2,50,5):
         # model = auto_arima(training, start_p=1, start_q=1,max_p=3, max_q=3, m=12,start_P=0, seasonal=True,d=1, D=1, trace=True,error_action='ignore',suppress_warnings=True)
         model = auto_arima(training, start_p=i, start_q=i, max_p=j, max_q=j, m=50, start_P=i, start_Q=i, max_P=j,
                            max_Q=j, stepwise=True, random_state=i, n_fits=i, seasonal=True, d=1, D=1, trace=True,
@@ -49,7 +47,7 @@ for i in range(N):
 
         plt.show()
 
-        k = k + 1
+        k = k + 2
 plt.plot(test['price'], color='orange', label='Real price')
 plt.plot(forecast['Prediction'], color='b', label='Prediction')
 plt.show()
