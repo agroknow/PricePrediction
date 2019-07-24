@@ -42,6 +42,7 @@ def api_training():
     dfevoo = df
     if product:
         dfevoo = df[df['product'] == product]
+        dfevoo = df[df['product'].str.contains(product)]
     if country:
         dfevoo = dfevoo[dfevoo['country'] == country]
     if data_Source:
@@ -63,10 +64,9 @@ def api_training():
     Data.index = Data.priceStringDate
     Data.drop('priceStringDate', axis=1, inplace=True)
 
-    lb = 80
+    # lb = 80
 
-    for lb in range(1, 160, 5):
-
+    for lb in range(59, 90, 1):
         # creating train and test sets
         dataset = Data.values
         scaler = MinMaxScaler(feature_range=(0, 1))
