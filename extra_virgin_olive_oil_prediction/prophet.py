@@ -52,15 +52,21 @@ for seasonality in range(7, 366, 5):
     # plt.legend(['predicted', 'trend', 'actual'], loc='upper left')
     # plt.show()
 
-    plt.plot(plotted['yhat_lower'].values)
-    plt.plot(plotted['yhat'].values)
-    plt.plot(plotted['yhat_upper'].values)
-    # plt.plot(plotted['trend'].values)
+    # plt.plot(plotted['yhat_lower'].values)
+    # plt.plot(plotted['yhat'].values)
+    # plt.plot(plotted['yhat_upper'].values)
+    # plt.plot(test['y'].values)
+    # plt.title('Olive Oil Price Prediction, seasonality: ' + str(seasonality))
+    # plt.legend(['predicted_lower', 'predicted', 'predicted_upper', 'actual'], loc=(1.04,0))
+    # plt.savefig('plots/s_' + str(seasonality) + 'prophet_' + str(periods) + '.png')
+    # plt.show()
+
+    plotted['avg'] = (plotted['yhat'] + plotted['yhat_lower']) / 2
+    plt.plot(plotted['avg'].values)
     plt.plot(test['y'].values)
     plt.title('Olive Oil Price Prediction, seasonality: ' + str(seasonality))
-    # plt.legend(['predicted_lower', 'predicted_upper', 'predicted_mean', 'trend', 'actual'], loc='upper left')
-    plt.legend(['predicted_lower', 'predicted', 'predicted_upper', 'actual'], loc=(1.04,0))
-    plt.savefig('plots/s_' + str(seasonality) + 'prophet_' + str(periods) + '.png')
+    plt.legend(['avg_prediction', 'actual'], loc=(1.04, 0))
+    plt.savefig('plots/avg_s_' + str(seasonality) + 'prophet_' + str(periods) + '.png')
     plt.show()
 
 # fig1 = m.plot(forecast)
