@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 from flask import Flask
 from flask import request, jsonify
-
+from tabulate import tabulate
+from operator import itemgetter, attrgetter
 from api.utils.LSTMModel import LSTMModel
 
 app = Flask(__name__)
@@ -42,7 +43,7 @@ def api_training():
     dfevoo = df
     if product:
         dfevoo = df[df['product'] == product]
-        # dfevoo = df[df['product'].str.contains(product)]
+        dfevoo = df[df['product'].str.contains(product)]
     if country:
         dfevoo = dfevoo[dfevoo['country'] == country]
     if data_Source:
@@ -67,7 +68,7 @@ def api_training():
     # lb = 80
     rms = [[]]
 
-    for lb in range(59, 65, 1):
+    for lb in range(55, 65, 1):
         # creating train and test sets
         dataset = Data.values
         scaler = MinMaxScaler(feature_range=(0, 1))
@@ -159,8 +160,9 @@ def api_training():
         rms.append([rmse, lb])
 
         print(rms)
-    rms.sort(key=lambda x:x[0])
-    print(rms)
+
+    with open('filename.txt', 'w') as outputfile:
+        outputfile.write(tabulate(rms))
     dictionary = {'predictions': predictions}
     return json.dumps(str(dictionary))
 

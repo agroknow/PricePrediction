@@ -32,10 +32,10 @@ plt.xlabel('priceStringDate',fontsize=18)
 plt.ylabel('price',fontsize=18)
 plt.show()
 k = 1
-for i in range(1,5,1):
-    for j in range(i,50,5):
+for i in range(1,2,1):
+    for j in range(i,2,5):
         # model = auto_arima(training, start_p=1, start_q=1,max_p=3, max_q=3, m=12,start_P=0, seasonal=True,d=1, D=1, trace=True,error_action='ignore',suppress_warnings=True)
-        model = auto_arima(training, start_p=i, start_q=i, max_p=j, max_q=j, m=50, start_P=i, start_Q=i, max_P=j,
+        model = auto_arima(training, start_p=i, start_q=i, max_p=j, max_q=j, m=54, start_P=i, start_Q=i, max_P=j,
                            max_Q=j, stepwise=True, random_state=i, n_fits=i, seasonal=True, d=1, D=1, trace=True,
                            error_action='ignore', suppress_warnings=True)
 
