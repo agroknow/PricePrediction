@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 from flask import Flask
 from flask import request, jsonify
-
+from tabulate import tabulate
+from operator import itemgetter, attrgetter
 from api.utils.LSTMModel import LSTMModel
 
 app = Flask(__name__)
@@ -65,8 +66,9 @@ def api_training():
     Data.drop('priceStringDate', axis=1, inplace=True)
 
     # lb = 80
+    rms = [[]]
 
-    for lb in range(59, 90, 1):
+    for lb in range(55, 65, 1):
         # creating train and test sets
         dataset = Data.values
         scaler = MinMaxScaler(feature_range=(0, 1))
@@ -154,7 +156,13 @@ def api_training():
         plt.legend()
         plt.savefig('plots/pred_2_%s.png' % str(lb), bbox_inches='tight')
         plt.show()
+        rmse = np.sqrt(np.mean(np.power((test - closing_price), 2)))
+        rms.append([rmse, lb])
 
+        print(rms)
+
+    with open('filename.txt', 'w') as outputfile:
+        outputfile.write(tabulate(rms))
     dictionary = {'predictions': predictions}
     return json.dumps(str(dictionary))
 
