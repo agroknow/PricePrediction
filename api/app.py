@@ -68,7 +68,7 @@ def api_training():
     # lb = 80
     rms = [[]]
 
-    for lb in range(55, 65, 1):
+    for lb in range(30, 35, 1):
         # creating train and test sets
         dataset = Data.values
         scaler = MinMaxScaler(feature_range=(0, 1))

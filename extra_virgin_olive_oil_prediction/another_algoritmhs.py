@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 
 df = pd.read_csv("food_dataset.csv")
 
-dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
+dfevoo = df[df['product'].str.contains('χοιρ')]
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
 dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
@@ -32,14 +32,17 @@ X_test=X_test.astype(float)
 predictions = lm.predict(X_test)
 X=X.values
 y=y.values
-plt.scatter(y_test,predictions,c='black')
+plt.scatter(y_test,predictions,c='black',label='Prediction')
 plt.show()
-plt.scatter(X,y)
+plt.scatter(X,y, c='red',label='True')
 
 plt.show()
 plt.figure(figsize = (18,9))
 plt.plot(predictions,color='b', label='Predection')
-plt.plot(y,color='orange', label='Real price')
+plt.plot(X_test,color='orange', label='Real price')
 plt.show()
+rmse = np.sqrt(np.mean(np.power((X_test - predictions), 2)))
+print(rmse)
+
 
 

@@ -5,11 +5,13 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler(feature_range=(0, 1))
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 # Downloading the Data
 df = pd.read_csv("food_dataset.csv")
 
-dfevoo = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
+dfevoo = df[df['product'].str.contains('χοιρ')]
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
 dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
@@ -62,3 +64,5 @@ plt.plot(test['price'])
 plt.xlabel('priceStringDate',fontsize=18)
 plt.ylabel('price',fontsize=18)
 plt.show()
+rms=np.sqrt(np.mean(np.power((np.array(y_test)-np.array(preds)),2)))
+print(rms)

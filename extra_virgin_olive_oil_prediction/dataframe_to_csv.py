@@ -13,12 +13,13 @@ parsed = json.loads(data)
 # dataframe
 df = pd.DataFrame(parsed)
 prouped_ordered = df.groupby(['product']).size().reset_index(name='counts').sort_values('counts')
-# print(prouped_ordered)
-print(prouped_ordered.head(250))
+print(prouped_ordered)
 
-quit(0)
-dfevoo = df[df['product'] == 'κατσίκια']
-# dfevoo = df[df['product'].str.contains("olive")]
+# print(dfevoo)
+# print(prouped_ordered.head(250))
+
+dfevoo = df[df['product'] == 'μπανάνες']
+dfevoo = df[df['product'].str.contains("olive")]
 dfevoo = dfevoo[dfevoo['country'] == 'greece']
 
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
@@ -26,7 +27,8 @@ dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'countr
     by='priceStringDate')
 
 dfevoo = pd.DataFrame(dfevoo)
-dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
+# dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
+print(dfevoo)
 data=dfevoo['price']
 #Data Visualization
 plt.figure(figsize = (18,9))
@@ -35,6 +37,8 @@ plt.xlabel('priceStringDate',fontsize=18)
 plt.ylabel('price',fontsize=18)
 plt.show()
 # quit(0)
+quit(0)
+
 #df.to_csv('food_dataset.csv', header=False, index=False)
 #df.to_csv('food_dataset.csv', sep='\t', encoding='utf-8')
 df.to_csv('food_dataset.csv', index=False)

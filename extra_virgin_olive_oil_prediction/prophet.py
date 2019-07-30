@@ -12,6 +12,7 @@ periods = 30
 
 columns = ['ds', 'y']
 df = pd.read_csv("food_dataset.csv")
+dfevoo = dfevoo[dfevoo['country'] == 'greece']
 
 # df = df[df['product'].str.contains('olive oil')]
 df = df[df['product'] == 'extra virgin olive oil (up to 0,8°)']
