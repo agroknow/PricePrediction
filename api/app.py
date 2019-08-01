@@ -37,17 +37,33 @@ def api_training():
     import seaborn as sns
     from keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
     scaler = MinMaxScaler(feature_range=(0, 1))
+    import requests
+    import json
+    response = requests.get("http://148.251.22.254:8080/price-api-1.0/price/findAll")
+    data = response.text
+    parsed = json.loads(data)
+    # print(json.dumps(parsed, indent=4))
+
+    # dataframe
+    df = pd.DataFrame(parsed)
 
     sns.set_style('darkgrid')
-    df = pd.read_csv("food_dataset.csv")
+    # df = pd.read_csv("food_dataset.csv")
     dfevoo = df
+    print(dfevoo)
     if product:
-        dfevoo = df[df['product'] == product]
-        dfevoo = df[df['product'].str.contains(product)]
+        # dfevoo = df[df['product'] == product]
+
+
+        dfevoo = df[df['product'].str.contains("garlic - ail, white, cat. i, cal. 50-80")]
     if country:
-        dfevoo = dfevoo[dfevoo['country'] == country]
+        print(dfevoo)
+        # dfevoo = dfevoo[dfevoo['country'] == country]
     if data_Source:
-        dfevoo = dfevoo[dfevoo['dataSource'] == data_Source]
+        # dfevoo = dfevoo[dfevoo['dataSource'] == data_Source]
+        dfevoo = dfevoo[dfevoo['dataSource'].str.contains(data_Source)]
+
+    print(dfevoo)
 
     if not (product or country or data_Source):
         return page_not_found(404)
@@ -58,7 +74,7 @@ def api_training():
     dfevoo = pd.DataFrame(dfevoo)
     dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
     Data = dfevoo
-
+    print(Data)
     # Long Short Term Memory (LSTM)
 
     # setting index
@@ -68,7 +84,7 @@ def api_training():
     # lb = 80
     rms = [[]]
 
-    for lb in range(30, 35, 1):
+    for lb in range(55, 65, 1):
         # creating train and test sets
         dataset = Data.values
         scaler = MinMaxScaler(feature_range=(0, 1))

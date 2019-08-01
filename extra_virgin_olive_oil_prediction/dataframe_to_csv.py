@@ -17,17 +17,23 @@ print(prouped_ordered)
 
 # print(dfevoo)
 # print(prouped_ordered.head(250))
-
-dfevoo = df[df['product'] == 'μπανάνες']
+# quit(0)
+# dfevoo = df[df['product'] == 'μπανάνες']
 dfevoo = df[df['product'].str.contains("olive")]
-dfevoo = dfevoo[dfevoo['country'] == 'greece']
+# dfevoo = dfevoo[dfevoo['country'] == 'greece']
 
 dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
-dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
+# dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
+#     by='priceStringDate')
+
+
+
+dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', ]).sort_values(
     by='priceStringDate')
+print(dfevoo)
 
 dfevoo = pd.DataFrame(dfevoo)
-# dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
+dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
 print(dfevoo)
 data=dfevoo['price']
 #Data Visualization
@@ -37,7 +43,7 @@ plt.xlabel('priceStringDate',fontsize=18)
 plt.ylabel('price',fontsize=18)
 plt.show()
 # quit(0)
-quit(0)
+# quit(0)
 
 #df.to_csv('food_dataset.csv', header=False, index=False)
 #df.to_csv('food_dataset.csv', sep='\t', encoding='utf-8')
