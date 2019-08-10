@@ -12,7 +12,7 @@ parsed = json.loads(data)
 
 # dataframe
 df = pd.DataFrame(parsed)
-prouped_ordered = df.groupby(['product']).size().reset_index(name='counts').sort_values('counts')
+prouped_ordered = df.groupby(['product']).size().reset_index(name='counts').sort_values('counts', ascending=False)
 print(prouped_ordered)
 
 # print(dfevoo)
@@ -43,7 +43,7 @@ plt.xlabel('priceStringDate',fontsize=18)
 plt.ylabel('price',fontsize=18)
 plt.show()
 # quit(0)
-# quit(0)
+quit(0)
 
 #df.to_csv('food_dataset.csv', header=False, index=False)
 #df.to_csv('food_dataset.csv', sep='\t', encoding='utf-8')

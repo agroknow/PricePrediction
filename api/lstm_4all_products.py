@@ -20,17 +20,25 @@ parsed = json.loads(data)
 
 # dataframe
 df = pd.DataFrame(parsed)
-prouped_ordered = df.groupby(['product']).size().reset_index(name='counts').sort_values('counts')
-print(prouped_ordered)
-# \test=prouped_ordered[800 :]
-prouped_ordered = prouped_ordered[prouped_ordered['counts'] > 1000]
-# quit(0)
+df = pd.read_csv("food_dataset.csv")
+prouped_ordered = df.groupby(['product']).size().reset_index(name='counts').sort_values('counts',ascending=False)
+# print(prouped_ordered)
+# test=prouped_ordered[800 :]
+
+prouped_ordered = prouped_ordered[prouped_ordered['counts'] > 500]
 for product in prouped_ordered['product']:
     print(product)
+    if product == 'pears - poires, conference, cat. i, size 60/65+':
+        continue
 
     path = os.getcwd()
     path=path+'/'+product+'/'
-    os.mkdir(path)
+    print(path)
+    # quit(0)
+    if not os.path.exists(path):
+       os.mkdir(path)
+    else:
+        continue
     print("The current working directory is %s" % path)
     # quit(0)
     dfevoo = df[df['product'] == product]
@@ -39,13 +47,22 @@ for product in prouped_ordered['product']:
 
     dfevoo['priceStringDate'] = pd.to_datetime(dfevoo['priceStringDate'])
     dfevoo = dfevoo.drop(columns=['price_id', 'product', 'priceDate', 'url', 'country', 'dataSource']).sort_values(
-        by='priceStringDate')
+        by='priceStringDate', ascending=False)
     dfevoo = pd.DataFrame(dfevoo)
     dfevoo = dfevoo.groupby('priceStringDate').mean().reset_index()
+    # print(dfevoo)
+    # quit(0)
+
+    group = len(dfevoo['priceStringDate'])
+
+    if group < 250:
+        continue
+
     Data = dfevoo
     print(Data)
     Data.index = Data.priceStringDate
     Data.drop('priceStringDate', axis=1, inplace=True)
+
 
     # lb = 80
     rms = [[]]
@@ -112,7 +129,7 @@ for product in prouped_ordered['product']:
         plt.plot(predictions, color='green', label='Predicted')
         plt.plot(test, color='blue', label='Actual')
         plt.title('Price Prediction  ')
-        plt.xlabel('date')
+
         plt.ylabel('price')
         plt.legend()
         plt.savefig(path+'pred_1_%s.png' % str(lb), bbox_inches='tight')
